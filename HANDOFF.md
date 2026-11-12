@@ -1,10 +1,11 @@
 # Noodle and the Sunbeam Heist — handoff guide
 
-Current version: **v8** (shown bottom-right of the title screen). Check a deploy with `?v=8`.
+Current version: **v9** (shown bottom-right of the title screen). Check a deploy with `?v=9`.
 
 ## Changelog
 - v1: World 1 built.
 - v2: game-feel update (owner asked: keep art, make it feel like a snappy Mario game). New movement physics, animation, juice, power-ups, treasures, flagpole, HUD clarity.
+- v9: upbeat music (all songs 15–30% faster, plucky lead, octave-hopping bass, claps/hats; menu has a light beat) and a new exciting "treasure" track for secret rooms. Secret rooms look like a party (spotlights, string lights, neon SECRET! sign, sparkles, confetti on entry). Story dialog: always one bar at the bottom, sized to the text, with Next (Go! on the last line) and a small Skip in the corner. 1-4 paint mixing replaced by a **flip switch** (`S` block toggles `L.flip`: `p` pink solid at 0, `q` blue solid at 1), level renamed **Flip-Flop Rooftops**. Noodle ~10% faster (`PH.RUN` 4.4) with a quicker scurry animation and running dust. Level complete now says "You made it across <level>!" with fish, new finds and stars labelled Made it / Found all 3 / Speedy (score hidden). Nap Sack simplified: one row per level with three big icons, tap for a card; stars total moved to the map. Cables now hold Noodle low on the rope (predictable swings); 1-3 paper plane moved onto the natural swing path. Checker now only counts a pickup if Noodle can land safely afterwards. Home-screen launch fills the whole screen.
 - v8: music rebuilt for reliability: each built-in song is pre-recorded into a WAV track with OfflineAudioContext at launch and played through a plain `<audio>` element (`SONGEL`), unlocked on the first tap. Ignores the iPhone/iPad silent switch and works inside app viewers. The live Web Audio sequencer remains only as a fallback. Map top bar tidied: Home left, Nap Sack + sound buttons right, world switcher under the world name.
 - v7: new grown-up art style across World 1 (owner approved the golden-hour / blue-hour mockups): one time of day per level (morning, noon, afternoon, golden hour, blue-hour dusk with moon and neon), hazy layered skyline with lit windows, water towers, antennas with string lights, richer bricks with dotted texture, thinner outlines, slightly lankier Noodle, pigeons in sunglasses. Flat HUD (hearts, fish count, "Finds", score) with music + sound toggle buttons at the top of play, map, Nap Sack, title and pause. Controls moved to thumb spots (arrows low-left, jump low-right, yarn to the left of jump) with bigger touch zones. Punchier jump (bigger stretch, dust, softer boing). Haptics (Android vibrate; iPhone iOS 18+ hidden-switch tap; iPad has no hardware) with a Vibration toggle in Settings. "Album" renamed **Nap Sack**, "treasures" are now "finds". Redesigned world map: one rooftop path, BOSS label, "Locked" text, "World 1 of 5" switcher, card with finds and best time, star legend. Home buttons on map, Nap Sack, pause. Secret rooms upgraded: treasure chests (+15 fish), bonus hearts, fish rain, fish fountain blocks; 1-4 jackpot has everything. Music fixes: louder mix, plus the silent-clip trick so iPhone/iPad play music with the ringer switch on silent. All glossy buttons replaced with flat pills.
 - v6: fish pickups now count anything touching the visible Noodle (`pickBox`); 1-4 opening fish moved onto the path / purple bridge line; zoomed in (phones ~11 tiles tall, bigger screens ~15.5); blocks, paint cans, fish, treasures and power-ups drawn 16–65% bigger; Noodle drawn 10% smaller. Next: owner approved mocking up a less-kiddy art style (bolder contrast, time of day per level, richer rooftops, thinner lines, flat HUD) before redrawing.
@@ -30,7 +31,7 @@ A Mario-style browser platformer for friends and family (teens and adults). One 
 ## Worlds
 | World | Name | Status | Boss | Planned mechanic |
 |---|---|---|---|---|
-| 1 | Old Town Rooftops | **Built (v2 feel update), awaiting approval** | Rocco the Raccoon (just guarding his home bins) | basics, springs, cables, paint mixing, Buzz |
+| 1 | Old Town Rooftops | **Built (v9), awaiting approval** | Rocco the Raccoon (just guarding his home bins) | basics, springs, cables, paint mixing, Buzz |
 | 2 | Neon Night Market | Planned | Bruno the shy bulldog bouncer | neon color signs |
 | 3 | The Construction Site | Planned | Wally the clumsy wrecking ball | number blocks bonked in order to build bridges |
 | 4 | Rainy Water Towers | Planned | Dramatic hat-stealing seagull | slippery puddles, leaky pipes |
@@ -42,7 +43,7 @@ A Mario-style browser platformer for friends and family (teens and adults). One 
 - 1-1 Morning Gutters: basics, umbrella block, secret chimney star room, album: spare house key.
 - 1-2 Awning Bounce: striped awning springs, secret window room, album: tiny café spoon.
 - 1-3 Antenna Alley: swinging cables, yarn block, album: kite with no string.
-- 1-4 Paint Can Rooftops: paint switches (red+blue=purple, red+yellow=orange, blue+yellow=green, all three=mud), Buzz ride with hover, zoomies block, album: rubber duck.
+- 1-4 Flip-Flop Rooftops: flip switch (pink/blue platforms), Buzz cruise ride, zoomies block, jackpot secret room.
 - 1-5 Rocco's Bins: boss. Rocco throws lids from a bin, then sits dazed on the bin; bop him 3 times. Lids can be bopped too. Gate closes on entry; the right wall opens after his apology scene. Album: bottle cap crown.
 
 ## Game feel — matched to Super Noah (tuning knobs: `PH` and `MOVE` in the core section)
