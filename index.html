@@ -42,7 +42,7 @@ canvas{position:fixed;left:0;top:0;display:block;touch-action:none}
 <script>
 'use strict';
 // ================= CORE: constants, physics, level data =================
-const VERSION = 9;
+const VERSION = 10;
 const T = 32;          // tile size in world units
 const LH = 16;         // level height in tiles
 const clamp = (v, a, b) => v < a ? a : (v > b ? b : v);
@@ -178,7 +178,7 @@ function moveY(p, L, ev) {
   } else {
     const ty = Math.floor(p.y / T);
     const cT = Math.floor((p.x + p.w / 2) / T);
-    if (canBonk(L, cT, ty)) { p.y = (ty + 1) * T; p.vy = 0.5; p.jumping = false; ev.push({ t: 'bonk', tx: cT, ty }); return; }
+    if (canBonk(L, cT, ty)) { p.y = (ty + 1) * T; p.vy = 2.5; p.jumping = false; ev.push({ t: 'bonk', tx: cT, ty }); return; }
     for (let tx = l; tx <= r; tx++) {
       if (!canBonk(L, tx, ty)) continue;
       // corner nudge so clipping an edge doesn't stop a jump
@@ -189,7 +189,7 @@ function moveY(p, L, ev) {
         const ov = p.x + p.w - tx * T;
         if (ov <= 10 && !overlapsSolid(L, { x: tx * T - p.w - 0.01, y: p.y, w: p.w, h: p.h })) { p.x = tx * T - p.w - 0.01; return; }
       }
-      p.y = (ty + 1) * T; p.vy = 0.5; p.jumping = false; ev.push({ t: 'bonk', tx, ty }); return;
+      p.y = (ty + 1) * T; p.vy = 2.5; p.jumping = false; ev.push({ t: 'bonk', tx, ty }); return;
     }
   }
 }
@@ -303,11 +303,13 @@ function stepPlayer(p, inp, L, ev) {
     } else if (dir < 0) { p.face = -1; p.vx = p.vx < -max ? Math.min(-max, p.vx * 0.93) : Math.max(p.vx - acc, -max); }
     else if (dir > 0) { p.face = 1; p.vx = p.vx > max ? Math.max(max, p.vx * 0.93) : Math.min(p.vx + acc, max); }
     else { p.vx *= p.onGround ? PH.FRICG : PH.FRICA; if (Math.abs(p.vx) < 0.08) p.vx = 0; }
-    if (inp.jumpPressed) p.jbuf = 8; else if (p.jbuf > 0) p.jbuf--;
+    if (inp.jumpPressed) p.jbuf = 10; else if (p.jbuf > 0) p.jbuf--;
+    if (!inp.jump) p.hopHeld = false;
+    if (inp.jump && p.hopHeld && p.onGround && !p.riding) p.jbuf = Math.max(p.jbuf, 1);   // keep holding jump: bouncy repeat hops
     if (p.onGround) p.coyote = 7; else if (p.coyote > 0) p.coyote--;
     if (p.jbuf > 0 && p.coyote > 0) {
       p.vy = p.riding ? -11 : (MOVE.easy ? -13.4 : PH.JV);
-      p.onGround = false; p.coyote = 0; p.jbuf = 0; p.jumping = true; p.jumpT = 0; p.sliding = false;
+      p.onGround = false; p.coyote = 0; p.jbuf = 0; p.jumping = true; p.jumpT = 0; p.sliding = false; p.hopHeld = true;
       ev.push({ t: 'jump' });
     }
     if (p.jumping && !inp.jump && p.vy < PH.CAPV) p.vy = PH.CAPV;     // short hop: cap the upward speed
@@ -438,7 +440,7 @@ const dropoff = (L, x0, x1, s) => { L.dropoff = { x: x0 * T, y: 0, w: (x1 - x0 +
 // ---------------- World 1: Old Town Rooftops ----------------
 function b11() {
   // basics: run, jump, bop, blocks; one rooftop hill to slide down; a mattress; a balloon; a secret chimney
-  const L = mk(172, 'Morning Gutters', 0, 70); L.start = { tx: 2, s: 3 };
+  const L = mk(178, 'Morning Gutters', 0, 70); L.start = { tx: 2, s: 3 };
   room(L, 0, 153);
   ground(L, 0, 30, 3);
   coins(L, 4, 8, 4);
@@ -476,18 +478,18 @@ function b11() {
   for (let i = 0; i < 4; i++) { fill(L, 134 + i, 134 + i, 4, 4 + i); coin(L, 134 + i, 5 + i); }
   fill(L, 138, 139, 4, 7); coins(L, 138, 139, 8);
   goal(L, 146, 3);
-  secretRoom(L, 152, 171, 3, 12);
+  secretRoom(L, 152, 177, 3, 12);
   stars(L, 158, 168, 4);
   plat(L, 160, 166, 6); stars(L, 160, 166, 7);
   token(L, 163, 9, 2); star(L, 159, 9); star(L, 167, 9); star(L, 161, 9); star(L, 165, 9);
   chest(L, 155, 4); tile(L, 157, 7, 'M');
-  warp(L, 169, 4, 1, 2, 97, 3, 'exit');
+  warp(L, 176, 4, 1, 2, 97, 3, 'exit');
   return L;
 }
 
 function b12() {
   // springs! plus a zipline ride and a secret rooftop window
-  const L = mk(182, 'Awning Bounce', 1, 85); L.start = { tx: 2, s: 3 };
+  const L = mk(188, 'Awning Bounce', 1, 85); L.start = { tx: 2, s: 3 };
   room(L, 0, 163);
   ground(L, 0, 24, 3);
   coins(L, 4, 8, 4);
@@ -526,19 +528,19 @@ function b12() {
   for (let i = 0; i < 4; i++) { fill(L, 142 + i, 142 + i, 4, 4 + i); coin(L, 142 + i, 5 + i); }
   fill(L, 146, 147, 4, 7);
   goal(L, 153, 3);
-  secretRoom(L, 162, 181, 3, 13);
+  secretRoom(L, 162, 187, 3, 13);
   tile(L, 168, 4, '^'); tile(L, 172, 4, '^'); tile(L, 176, 4, '^');
   stars(L, 167, 169, 9); stars(L, 171, 173, 11); stars(L, 175, 177, 9);
   star(L, 166, 5); star(L, 170, 5); star(L, 174, 5); star(L, 178, 5);
   token(L, 172, 12, 2);
   heartItem(L, 165, 4); chest(L, 177, 4);
-  warp(L, 179, 4, 1, 2, 104, 7, 'exit');
+  warp(L, 186, 4, 1, 2, 104, 7, 'exit');
   return L;
 }
 
 function b13() {
   // swinging antenna cables, a rescue balloon, a zipline and a slope to finish
-  const L = mk(184, 'Antenna Alley', 2, 95); L.start = { tx: 2, s: 3 };
+  const L = mk(190, 'Antenna Alley', 2, 95); L.start = { tx: 2, s: 3 };
   room(L, 0, 165);
   ground(L, 0, 20, 3);
   coins(L, 3, 7, 4);
@@ -570,19 +572,19 @@ function b13() {
   slopeUp(L, 140, 3, 2); ground(L, 142, 145, 5); slopeDown(L, 146, 5, 2);
   coins(L, 142, 145, 6);
   goal(L, 156, 3);
-  secretRoom(L, 164, 183, 3, 13);
+  secretRoom(L, 164, 189, 3, 13);
   vine(L, 172, 12, 4); vine(L, 177, 12, 4);
   stars(L, 168, 180, 4);
   star(L, 170, 8); star(L, 172, 6); star(L, 174, 8); star(L, 175, 8); star(L, 177, 6); star(L, 179, 8);
   token(L, 174, 10, 2);
   chest(L, 167, 4); L.rooms[L.rooms.length - 1].rain = true;
-  warp(L, 181, 4, 1, 2, 89, 6, 'exit');
+  warp(L, 188, 4, 1, 2, 89, 6, 'exit');
   return L;
 }
 
 function b14() {
   // flip-switch rooftops: one switch, pink or blue platforms; then Buzz flies you across
-  const L = mk(186, 'Flip-Flop Rooftops', 3, 110); L.start = { tx: 2, s: 3 };
+  const L = mk(192, 'Flip-Flop Rooftops', 3, 110); L.start = { tx: 2, s: 3 };
   room(L, 0, 165);
   ground(L, 0, 14, 3);
   coins(L, 3, 4, 4); coins(L, 8, 10, 4);
@@ -620,7 +622,7 @@ function b14() {
   slopeDown(L, 142, 8, 2); ground(L, 144, 163, 6);
   flyer(L, 147, 9);
   goal(L, 157, 6);
-  secretRoom(L, 164, 185, 3, 13);
+  secretRoom(L, 164, 191, 3, 13);
   tile(L, 169, 7, 'S');
   plat(L, 172, 182, 6, 'p');
   stars(L, 167, 171, 4); for (let x = 172; x <= 182; x++) { gold(L, x, 4); gold(L, x, 5); gold(L, x, 7); gold(L, x, 8); }
@@ -628,7 +630,7 @@ function b14() {
   L.rooms[L.rooms.length - 1].jackpot = true; L.rooms[L.rooms.length - 1].rain = true;
   chest(L, 166, 4); heartItem(L, 168, 4); tile(L, 178, 10, 'M');
   token(L, 180, 10, 2);
-  warp(L, 183, 4, 1, 2, 139, 8, 'exit');
+  warp(L, 190, 4, 1, 2, 139, 8, 'exit');
   return L;
 }
 
@@ -1994,7 +1996,7 @@ function startLevel(wi, li) {
   G.yarn = null; G.streak = 0; G.streakT = -99; G.nextHundred = 100;
   G.groupLeft = {}; for (const it of L.items) if (it.gid) G.groupLeft[it.gid] = (G.groupLeft[it.gid] || 0) + 1;
 }
-function toast(s, f) { if (G) G.toast = { s, t: 0, life: f || 240 }; }
+function toast(s, f) { if (G) G.toast = { s, t: 0, life: Math.min(f || 160, 170) }; }
 function roomFor(x) { const L = G.L; for (const r of L.rooms) if (x >= r.x0 && x < r.x1) return r; return L.rooms[0] || { x0: 0, x1: L.w * T }; }
 function camTarget() {
   const g = G, p = g.p, L = g.L, vw = VW / SCALE, vh = VH / SCALE;
@@ -2018,7 +2020,7 @@ function updateCam() {
 }
 
 // --------- effects ---------
-function popWord(x, y, s, c, size) { G.pops.push({ x, y, s, c: c || COL.white, size: size || 14, t: 0, life: 50 }); }
+function popWord(x, y, s, c, size) { G.pops.push({ x, y, s, c: c || COL.white, size: Math.min(size || 14, 18), t: 0, life: 36 }); }
 function burst(x, y, n, cols, sp, kind) {
   for (let i = 0; i < n; i++) {
     const a = Math.random() * Math.PI * 2, v = (sp || 3) * (0.4 + Math.random());
@@ -2047,16 +2049,16 @@ function onEvent(e) {
   const g = G, p = g.p;
   switch (e.t) {
     case 'jump': SFX.jump(); dust(p.x + p.w / 2, p.y + p.h, 9); g.squash = -0.36;
-      g.pops.push({ x: p.x + p.w / 2 - p.face * 14, y: p.y + p.h, s: JUMPWORDS[(g.t >> 3) % JUMPWORDS.length], c: 'rgba(255,255,255,.85)', size: 10, t: 0, life: 24 }); break;
+      break;
     case 'land': {
       const hit = Math.min(0.38, 0.08 + g.lastVy * 0.03);
       SFX.land(); dust(p.x + p.w / 2, p.y + p.h, g.lastVy > 8 ? 9 : 5); g.squash = hit; g.combo = 0;
       if (g.lastVy > 9) g.shake = Math.max(g.shake, 2); break; }
-    case 'spring': SFX.spring(); g.springT.set(e.tx + ',' + e.ty, 14); popWord(p.x + p.w / 2, p.y - 6, e.c === 'T' ? 'BOUNCE!' : 'BOING!', COL.red, 18);
+    case 'spring': SFX.spring(); g.springT.set(e.tx + ',' + e.ty, 14); 
       burst(e.tx * T + 16, e.ty * T + 4, 12, [COL.red, COL.white], 4, 'star'); g.squash = -0.35; break;
     case 'bonk': onBonk(e.tx, e.ty); break;
-    case 'grab': SFX.grab(); popWord(p.x + p.w / 2, p.y - 6, 'Grab!', COL.teal, 13); break;
-    case 'release': SFX.swing(); popWord(p.x + p.w / 2, p.y - 6, 'Wheee!', COL.teal, 15); burst(p.x + p.w / 2, p.y + p.h / 2, 8, [COL.teal, COL.white]); g.squash = -0.25; break;
+    case 'grab': SFX.grab(); break;
+    case 'release': SFX.swing(); burst(p.x + p.w / 2, p.y + p.h / 2, 8, [COL.teal, COL.white]); g.squash = -0.25; break;
     case 'warp': {
       SFX.warp(); g.fade = 26; snapCam();
       const r = roomFor(p.x + p.w / 2);
@@ -2067,10 +2069,10 @@ function onEvent(e) {
       if (e.w.kind !== 'exit') { burst(p.x + p.w / 2, p.y, 16, [COL.sun, COL.white], 4, 'star'); for (let i = 0; i < 40; i++) g.parts.push({ x: p.x + rnd(-200, 200), y: p.y - rnd(120, 260), vx: rnd(-1, 1), vy: rnd(0, 2), life: 90, t: 0, c: [COL.sun, COL.pink, COL.mint, '#5FB4FF', COL.white][i % 5], s: 3, g: 0.06, kind: 'feather', r: rnd(0, 6) }); }
       break; }
     case 'mount': onMount(); break;
-    case 'balloon': { const b = g.L.balloons[e.i]; b.sq = 12; SFX.balloon(); g.squash = -0.32; popWord(b.x, b.y - 26, ['BOING!', 'Bloop!', 'Whee!'][e.i % 3], COL.pink, 16); burst(b.x, b.y - 16, 10, [COL.pink, COL.white, COL.sun], 4, 'star'); break; }
-    case 'line': SFX.spring(); g.springT.set('line' + e.tx, 16); g.squash = -0.32; popWord(p.x + p.w / 2, p.y - 6, 'Fwoomp!', COL.sun, 16); burst(p.x + p.w / 2, p.y + p.h, 10, [COL.white, COL.sun], 4, 'star'); break;
-    case 'zip': SFX.zip(); popWord(p.x + p.w / 2, p.y - 10, 'Zip!', COL.teal, 16); burst(p.x + p.w / 2, p.y, 8, [COL.teal, COL.white], 3, 'star'); break;
-    case 'unzip': SFX.swing(); g.squash = -0.2; popWord(p.x + p.w / 2, p.y - 6, 'Wheee!', COL.teal, 15); break;
+    case 'balloon': { const b = g.L.balloons[e.i]; b.sq = 12; SFX.balloon(); g.squash = -0.32; burst(b.x, b.y - 16, 10, [COL.pink, COL.white, COL.sun], 4, 'star'); break; }
+    case 'line': SFX.spring(); g.springT.set('line' + e.tx, 16); g.squash = -0.32; burst(p.x + p.w / 2, p.y + p.h, 10, [COL.white, COL.sun], 4, 'star'); break;
+    case 'zip': SFX.zip(); burst(p.x + p.w / 2, p.y, 8, [COL.teal, COL.white], 3, 'star'); break;
+    case 'unzip': SFX.swing(); g.squash = -0.2; break;
     case 'dropoff': SFX.buzz(); popWord(p.x + p.w / 2, p.y - 20, 'Shift over. Bye!', COL.sun, 14); burst(p.x + p.w / 2, p.y + p.h, 10, [COL.sun, COL.white]); break;
     case 'spike': hurt(); break;
     case 'pit': onPit(); break;
@@ -2096,15 +2098,15 @@ function onBonk(tx, ty) {
   } else if (c === 'M') {
     bump(); fishPop();
     const n = (g.multi.get(tx + ',' + ty) || 0) + 1; g.multi.set(tx + ',' + ty, n);
-    if (n === 1) popWord(cx, cy - 34, 'Keep bonking!', COL.sun, 14);
-    if (n >= 8) { L.g[ty][tx] = '!'; popWord(cx, cy - 34, 'Fish fountain!', COL.sun, 16); }
+    collectFish(1, cx, cy - 20);   // two fish per bonk
+    if (n >= 5) L.g[ty][tx] = '!';
   } else if ('UZACJ'.includes(c)) {
     L.g[ty][tx] = '!'; bump();
     const type = { U: 'umbrella', Z: 'zoomies', A: 'yarn', C: 'chonk', J: 'chonk' }[c];
     // the item springs out of the block in an arc
     const dir = g.p.x + g.p.w / 2 < cx ? 1 : -1;
     g.powers.push({ type, x: cx, y: cy - 14, vx: dir * 1.7, vy: -6.5, t: 0, got: false, rest: false });
-    SFX.appear(); popWord(cx, cy - 22, c === 'J' ? 'Hidden block!' : 'Ooh!', COL.white, 15); burst(cx, cy, 12, [COL.sun, COL.mint, COL.white], 3, 'star');
+    SFX.appear(); if (c === 'J') popWord(cx, cy - 22, 'Hidden block!', COL.white, 13); burst(cx, cy, 12, [COL.sun, COL.mint, COL.white], 3, 'star');
   } else if (c === 'S') {
     bump(); toggleFlip(g.p, L); chunkClear(); SFX.paint(); haptic(20);
     const blue = L.flip === 1;
@@ -2127,7 +2129,7 @@ function collectFish(n, x, y, gid) {
   g.chain = g.t - g.chainT < 40 ? g.chain + 1 : 0; g.chainT = g.t;
   g.streak = g.t - g.streakT < 50 ? g.streak + n : n; g.streakT = g.t;
   addFish(n); SFX.note(g.chain);
-  popWord(x, y, '+' + n, n > 1 ? COL.sun : COL.white, n > 1 ? 15 : 12);
+  if (n > 1) popWord(x, y, '+' + n, COL.sun, 14);
   if (g.streak >= 10 && Math.floor(g.streak / 10) > Math.floor((g.streak - n) / 10)) {
     const k = Math.floor(g.streak / 10);
     g.banner = { s: 'FISH STREAK x' + (k * 10) + '!', t: 0, c: [COL.sun, COL.orange, COL.pink, COL.mint, COL.purple][Math.min(k - 1, 4)] };
@@ -2159,7 +2161,7 @@ function collect(it) {
     burst(it.x, it.y, 26, [COL.sun, COL.white, COL.pink], 5, 'star');
     const a = (ALBUM[g.def.id] || [])[it.i];
     popWord(it.x, it.y - 18, 'Found it!', COL.pink, 20);
-    if (a) toast('Into the Nap Sack: ' + a.name + ' (' + g.tokens.filter(Boolean).length + ' of 3)', 160);
+    g.findPulse = { i: it.i, t: 0 };
   }
 }
 function addPouch(type) {
@@ -2241,7 +2243,8 @@ function isFirm(tx, ty) { const c = tileAt(G.L, tx, ty); return c === '#' || c =
 function updatePlay() {
   const g = G, L = g.L, p = g.p;
   g.t++;
-  if (g.banner) { g.banner.t++; if (g.banner.t > 110) g.banner = null; }
+  if (g.banner) { g.banner.t++; if (g.banner.t > 90) g.banner = null; }
+  if (g.findPulse) { g.findPulse.t++; if (g.findPulse.t > 60) g.findPulse = null; }
   if (g.clearT >= 0) { updateClear(); updateFx(); updateCam(); return; }
   g.freeze = 0;
   if (g.morph) {                                                  // transformation flash
@@ -2282,7 +2285,7 @@ function updatePlay() {
     if (p.onGround && Math.abs(p.vx) > 3 && g.t % 9 === 0) dust(p.x + p.w / 2 - p.face * 10, p.y + p.h, 1);
     if (p.skid) { if (!g.wasSkid) SFX.skid(); if (g.t % 3 === 0) dust(p.x + p.w / 2 + p.face * 8, p.y + p.h, 2); }
     g.wasSkid = p.skid;
-    if (p.sliding) { if (!g.wasSlide) { SFX.slide(); popWord(p.x + p.w / 2, p.y - 12, 'Wheeee!', COL.sun, 15); } if (g.t % 2 === 0) g.parts.push({ x: p.x + p.w / 2 - p.face * 12, y: p.y + p.h, vx: -p.face * rnd(0.5, 2), vy: rnd(-2, -0.5), life: 14, t: 0, c: g.t % 4 ? COL.sun : COL.white, s: 2.5, g: 0.15, kind: 'star', r: 0 }); }
+    if (p.sliding) { if (!g.wasSlide) SFX.slide(); if (g.t % 2 === 0) g.parts.push({ x: p.x + p.w / 2 - p.face * 12, y: p.y + p.h, vx: -p.face * rnd(0.5, 2), vy: rnd(-2, -0.5), life: 14, t: 0, c: g.t % 4 ? COL.sun : COL.white, s: 2.5, g: 0.15, kind: 'star', r: 0 }); }
     g.wasSlide = p.sliding;
     if (!g.flocks) g.flocks = [];
     if ((Math.abs(p.vx) > 3.5 && g.t % 200 === 0) || g.t % 600 === 300) {
@@ -2372,8 +2375,7 @@ function stompEnemy(e) {
   const word = n === 1 ? BOPWORDS[(g.t >> 2) % BOPWORDS.length] : n === 2 ? 'NICE!' : 'x' + n + '!';
   if (n >= 3) { pts += 1000; SFX.combo(); g.banner = { s: n === 3 ? 'SUPER COMBO!' : 'SUPER COMBO x' + n + '!', t: 0, c: COMBOCOLS[n - 1] }; }
   g.score += pts;
-  popWord(e.x + e.w / 2, e.y - 4, word, COMBOCOLS[n - 1], 15 + n * 2);
-  popWord(e.x + e.w / 2, e.y + 14, '+' + pts, COL.white, 11);
+  popWord(e.x + e.w / 2, e.y - 4, word, COMBOCOLS[n - 1], 13 + Math.min(n, 3) * 2);
   SFX.boing(); SFX.bop(n); haptic(18);
   g.freeze = 3; g.shake = 3 + n; g.squash = -0.3;
   burst(e.x + e.w / 2, e.y + e.h / 2, 12, [COL.sun, COL.white], 4, 'star');
@@ -2752,9 +2754,9 @@ function renderPlay(frozen) {
   if (g.fade > 0) { ctx.fillStyle = 'rgba(43,27,61,' + (g.fade / 30) + ')'; ctx.fillRect(0, 0, VW, VH); }
   if (!frozen || S === 'pause') renderHUD();
   if (g.banner && !frozen) {
-    const b = g.banner, k = Math.min(1, b.t / 8), out = b.t > 90 ? (110 - b.t) / 20 : 1;
-    ctx.save(); ctx.globalAlpha = Math.max(0, out); ctx.translate(VW / 2, VH * 0.3); const sc = (0.6 + k * 0.4) * (1 + Math.sin(b.t * 0.25) * 0.03); ctx.scale(sc, sc); ctx.rotate(-0.04);
-    txt(b.s, 0, 0, Math.round(34 * U), b.c, 'center', FD, 7 * U); ctx.restore();
+    const b = g.banner, k = Math.min(1, b.t / 8), out = b.t > 70 ? (90 - b.t) / 20 : 1;
+    ctx.save(); ctx.globalAlpha = Math.max(0, out) * 0.95; ctx.translate(VW / 2, SAFE.t + 112 * U); const sc = 0.7 + k * 0.3; ctx.scale(sc, sc);
+    txt(b.s, 0, 0, Math.round(22 * U), b.c, 'center', FD, 5 * U); ctx.restore();
   }
   if (!frozen && showTouch && g.clearT < 0) renderTouch();
 }
@@ -2953,7 +2955,8 @@ function renderHUD() {
     const x = after - 8 * U - (2 - i) * 32 * U - 15 * U, y = pcy;
     const it = g.L.items.find(it2 => it2.k === 'token' && it2.i === i);
     const got = g.tokens[i], old = it && it.ghost;
-    ci(x, y, 14 * U); ctx.fillStyle = got ? 'rgba(255,230,128,.95)' : 'rgba(255,246,234,.5)'; ctx.fill();
+    const pulse = g.findPulse && g.findPulse.i === i ? 1 + Math.sin(g.findPulse.t * 0.3) * 0.25 * (1 - g.findPulse.t / 60) : 1;
+    ci(x, y, 14 * U * pulse); ctx.fillStyle = got ? 'rgba(255,230,128,.95)' : 'rgba(255,246,234,.5)'; ctx.fill();
     if (tr[i]) drawAlbumIcon(tr[i].id, x, y, 0.62 * U, !got);
     if (old && !got) { ci(x + 10 * U, y - 10 * U, 4 * U); ctx.fillStyle = COL.mint; ctx.fill(); }
   }
@@ -2968,9 +2971,9 @@ function renderHUD() {
   if (g.toast) {
     const a = Math.min(1, g.toast.t / 10, (g.toast.life - g.toast.t) / 15);
     ctx.save(); ctx.globalAlpha = Math.max(0, a);
-    ctx.font = '600 ' + Math.round(15 * U) + 'px ' + FB; const w = ctx.measureText(g.toast.s).width + 30 * U;
-    const y = VH * 0.42;
-    rr(VW / 2 - w / 2, y - 17 * U, w, 34 * U, 17 * U); ctx.fillStyle = 'rgba(27,20,40,.8)'; ctx.fill();
+    ctx.font = '600 ' + Math.round(13 * U) + 'px ' + FB; const w = ctx.measureText(g.toast.s).width + 26 * U;
+    const y = SAFE.t + 140 * U;
+    rr(VW / 2 - w / 2, y - 14 * U, w, 28 * U, 14 * U); ctx.fillStyle = 'rgba(27,20,40,.6)'; ctx.fill();
     ctx.fillStyle = '#FFF3E0'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(g.toast.s, VW / 2, y + 1);
     ctx.restore();
   }
