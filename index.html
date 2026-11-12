@@ -42,7 +42,7 @@ canvas{position:fixed;left:0;top:0;display:block;touch-action:none}
 <script>
 'use strict';
 // ================= CORE: constants, physics, level data =================
-const VERSION = 11;
+const VERSION = 12;
 const T = 32;          // tile size in world units
 const LH = 16;         // level height in tiles
 const clamp = (v, a, b) => v < a ? a : (v > b ? b : v);
@@ -1731,18 +1731,20 @@ let showTouch = ('ontouchstart' in window) || (navigator.maxTouchPoints || 0) > 
 
 function resize() {
   const vv = window.visualViewport;
-  VW = Math.max(200, Math.round(vv ? vv.width : window.innerWidth));
-  VH = Math.max(150, Math.round(vv ? vv.height : window.innerHeight));
   const standalone = (window.navigator && window.navigator.standalone) || (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches);
-  if (standalone && window.screen) {
-    // home-screen app: use the full physical screen so there is no empty strip at the bottom
-    const land = window.innerWidth > window.innerHeight, a = window.screen.width, b = window.screen.height;
-    VW = Math.max(VW, land ? Math.max(a, b) : Math.min(a, b)); VH = Math.max(VH, land ? Math.min(a, b) : Math.max(a, b));
+  if (standalone && cv.getBoundingClientRect) {
+    // Home Screen app: let CSS stretch the canvas over the whole screen (100vh covers the strip iOS
+    // leaves below the reported window height), then measure what we actually got.
+    cv.style.width = '100vw'; cv.style.height = '100vh';
+    const r = cv.getBoundingClientRect();
+    VW = Math.max(200, Math.round(r.width)); VH = Math.max(150, Math.round(r.height));
+  } else {
+    VW = Math.max(200, Math.round(vv ? vv.width : window.innerWidth));
+    VH = Math.max(150, Math.round(vv ? vv.height : window.innerHeight));
   }
-  VH = Math.max(VH, (document.documentElement && document.documentElement.clientHeight) || 0);
   DPR = Math.min(window.devicePixelRatio || 1, 2);
   cv.width = Math.round(VW * DPR); cv.height = Math.round(VH * DPR);
-  cv.style.width = VW + 'px'; cv.style.height = VH + 'px';
+  if (!standalone) { cv.style.width = VW + 'px'; cv.style.height = VH + 'px'; }
   // zoom from the real visible height: phones see ~9 tiles, big screens up to 15
   const phone = VH < 520;
   SCALE = phone ? VH / (11 * T) : Math.max(VH / (15.5 * T), Math.min(VH / (LH * T), VW / (30 * T)));
