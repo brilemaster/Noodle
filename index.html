@@ -42,7 +42,7 @@ canvas{position:fixed;left:0;top:0;display:block;touch-action:none}
 <script>
 'use strict';
 // ================= CORE: constants, physics, level data =================
-const VERSION = 10;
+const VERSION = 11;
 const T = 32;          // tile size in world units
 const LH = 16;         // level height in tiles
 const clamp = (v, a, b) => v < a ? a : (v > b ? b : v);
@@ -50,8 +50,8 @@ const lerp = (a, b, t) => a + (b - a) * t;
 const rnd = (a, b) => a + Math.random() * (b - a);
 
 // Movement matched to Super Noah: steady top speed, smooth glide to a stop, one gravity up and down
-const PH = { G: 0.55, MAXF: 13, JV: -12.5, CAPV: -4, ACC: 0.7, AACC: 0.45, FRICG: 0.7, FRICA: 0.94,
-  RUN: 4.4, ZRUN: 6, SPRING: -17, BOP: -9, BOPH: -13, BALLOON: -13, BALLOONH: -15, LINE: -14 };
+const PH = { G: 0.71, MAXF: 14, JV: -14.2, CAPV: -5, ACC: 0.7, AACC: 0.45, FRICG: 0.7, FRICA: 0.94,
+  RUN: 4.4, ZRUN: 6, SPRING: -19.3, BOP: -10.2, BOPH: -14.8, BALLOON: -14.8, BALLOONH: -17, LINE: -15.9 };
 // Easy mode (also matched to Super Noah): 45% speed, gentler acceleration, softer falls
 const MOVE = { easy: false };
 
@@ -238,7 +238,7 @@ function vineStep(p, inp, L, ev) {
   if (inp.jumpPressed) {
     const s = v.av * p.vr;
     p.vx = clamp(Math.cos(v.ang) * s * 1.15 + dir * 1.2, -6.5, 6.5);
-    p.vy = Math.min(-Math.sin(v.ang) * s, 0) - 7;
+    p.vy = Math.min(-Math.sin(v.ang) * s, 0) - 8;
     p.vine = -1; p.vineCD = 18; p.jumping = true; p.jumpT = 3;
     ev.push({ t: 'release' });
   }
@@ -267,7 +267,7 @@ function zipStep(p, inp, L, ev) {
   if (blocked) { p.x = ox; p.y = oy; }
   if (inp.jumpPressed || t >= 1 || blocked) {
     const ux = (z.x2 - z.x1) / len, uy = (z.y2 - z.y1) / len;
-    p.vx = clamp(ux * p.zs, -7, 7); p.vy = inp.jumpPressed ? -9.5 : uy * p.zs * 0.4;
+    p.vx = clamp(ux * p.zs, -7, 7); p.vy = inp.jumpPressed ? -10.8 : uy * p.zs * 0.4;
     p.zip = -1; p.zipCD = 20; p.jumping = !!inp.jumpPressed; p.jumpT = 3;
     ev.push({ t: 'unzip' });
   }
@@ -308,7 +308,7 @@ function stepPlayer(p, inp, L, ev) {
     if (inp.jump && p.hopHeld && p.onGround && !p.riding) p.jbuf = Math.max(p.jbuf, 1);   // keep holding jump: bouncy repeat hops
     if (p.onGround) p.coyote = 7; else if (p.coyote > 0) p.coyote--;
     if (p.jbuf > 0 && p.coyote > 0) {
-      p.vy = p.riding ? -11 : (MOVE.easy ? -13.4 : PH.JV);
+      p.vy = p.riding ? -12.5 : (MOVE.easy ? -13.4 : PH.JV);
       p.onGround = false; p.coyote = 0; p.jbuf = 0; p.jumping = true; p.jumpT = 0; p.sliding = false; p.hopHeld = true;
       ev.push({ t: 'jump' });
     }
@@ -510,7 +510,7 @@ function b12() {
   // spring pillars over a pit
   fill(L, 83, 84, 1, 3); tile(L, 83, 4, '^'); tile(L, 84, 4, '^');
   fill(L, 87, 88, 1, 3); tile(L, 87, 4, '^'); tile(L, 88, 4, '^');
-  trail(L, [[81, 7], [83, 10], [85, 12], [87, 10], [89, 8]]);
+  trail(L, [[81, 7], [84, 8], [85, 12], [89, 8]]);
   token(L, 86, 13, 1);
   ground(L, 91, 120, 3);
   // stairs up to a roof with a zipline and a secret window
@@ -663,13 +663,26 @@ function b15() {
   return L;
 }
 
+const BOXES = '?MUZACHJS';
+function lowerBoxes(L) {
+  for (let ty = 1; ty < L.h; ty++) for (let tx = 0; tx < L.w; tx++) {
+    const c = L.g[ty][tx]; if (!BOXES.includes(c)) continue;
+    // exactly three empty tiles, then a solid floor
+    let ok = true; for (let k = 1; k <= 3; k++) if (tileAt(L, tx, ty + k) !== '.') ok = false;
+    const fl = tileAt(L, tx, ty + 4);
+    if (!ok || !(fl === '#' || fl === 'W' || fl === '!' )) continue;
+    if (tileAt(L, tx, ty + 1) !== '.' || L.g[ty][tx] !== c) continue;
+    L.g[ty + 1][tx] = c; L.g[ty][tx] = '.';
+  }
+  return L;
+}
 const WORLDS = [
   { n: 1, name: 'Old Town Rooftops', ready: true, levels: [
-    { id: '1-1', name: 'Morning Gutters', build: b11 },
-    { id: '1-2', name: 'Awning Bounce', build: b12 },
-    { id: '1-3', name: 'Antenna Alley', build: b13 },
-    { id: '1-4', name: 'Flip-Flop Rooftops', build: b14 },
-    { id: '1-5', name: "Rocco's Bins", build: b15, boss: true } ] },
+    { id: '1-1', name: 'Morning Gutters', build: () => lowerBoxes(b11()) },
+    { id: '1-2', name: 'Awning Bounce', build: () => lowerBoxes(b12()) },
+    { id: '1-3', name: 'Antenna Alley', build: () => lowerBoxes(b13()) },
+    { id: '1-4', name: 'Flip-Flop Rooftops', build: () => lowerBoxes(b14()) },
+    { id: '1-5', name: "Rocco's Bins", build: () => lowerBoxes(b15()), boss: true } ] },
   { n: 2, name: 'Neon Night Market', ready: false, levels: [] },
   { n: 3, name: 'The Construction Site', ready: false, levels: [] },
   { n: 4, name: 'Rainy Water Towers', ready: false, levels: [] },
