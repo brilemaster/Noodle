@@ -42,7 +42,7 @@ canvas{position:fixed;left:0;top:0;display:block;touch-action:none}
 <script>
 'use strict';
 // ================= CORE: constants, physics, level data =================
-const VERSION = 23;
+const VERSION = 25;
 const T = 32;          // tile size in world units
 const LH = 16;         // level height in tiles
 const clamp = (v, a, b) => v < a ? a : (v > b ? b : v);
@@ -428,6 +428,11 @@ const sign = (L, x, s, a, b, mix) => L.deco.push({ k: 'sign', x: x * T + 16, y: 
 const sunspot = (L, x, s, w) => L.deco.push({ k: 'sun', x: x * T, y: (L.h - s) * T, w: (w || 3) * T });
 // empty sunshine jars left along the thief's trail, roughly every 22 tiles on open rooftops
 function addJars(L) {
+  for (const v of L.vines) {
+    const tx = Math.floor(v.ax / T); let ty = Math.floor(v.ay / T) - 1;
+    while (ty > 0 && !isSolid(L, tx, ty)) ty--;
+    v.pole = Math.max(46, v.ay - (ty + 1) * T + 2);
+  }
   const main = L.rooms[0] || { x0: 0, x1: L.w * T };
   for (let tx = 14; tx < main.x1 / T - 12; tx += 22) {
     for (let ty = 2; ty < L.h - 1; ty++) {
@@ -448,6 +453,7 @@ function warp(L, x, h, w, hh, dx, ds, kind) {
 }
 // secret room: walls at x0, x0+1 and x1; floor height `floor`; ceiling from height `ceil`
 function secretRoom(L, x0, x1, floor, ceil) {
+  ceil = Math.min(ceil + 2, LH - 2);   // roomier: two more tiles of headroom
   fill(L, x0, x0 + 1, 1, LH); fill(L, x1, x1, 1, LH);
   ground(L, x0 + 2, x1 - 1, floor); fill(L, x0 + 2, x1 - 1, ceil, LH);
   L.rooms.push({ x0: x0 * T, x1: (x1 + 1) * T, secret: true });
@@ -776,24 +782,24 @@ function b22() {
 function b23() {
   const L = mk(178, 'Tangled Wires', 6, 90); L.start = { tx: 2, s: 3 };
   room(L, 0, 153);
-  ground(L, 0, 18, 3); sunspot(L, 3, 3, 3);
+  ground(L, 0, 19, 3); sunspot(L, 3, 3, 3);
   greet(L, 10, 'Mind the wires, Noodle!');
   coins(L, 3, 7, 4);
   tile(L, 8, 7, '?'); tile(L, 9, 7, 'Z'); tile(L, 10, 7, '?');
   vine(L, 22, 11, 5); trail(L, [[20, 7], [22, 8], [24, 7]]);
-  ground(L, 26, 46, 3);
+  ground(L, 25, 46, 3);
   lizard(L, 32, 3);
   plat(L, 38, 41, 6); token(L, 40, 7, 0); coin(L, 38, 7); coin(L, 39, 7); coin(L, 41, 7);
-  vine(L, 50, 11, 5); vine(L, 54, 11, 5); balloon(L, 52, 3, 1);
+  vine(L, 49, 11, 5); vine(L, 55, 11, 5); ground(L, 51, 53, 3); coins(L, 51, 53, 4);
   trail(L, [[49, 8], [52, 9], [55, 8]]);
-  ground(L, 58, 90, 3);
+  ground(L, 58, 92, 3);
   flag(L, 61, 3);
   for (let i = 0; i < 3; i++) fill(L, 68 + i, 68 + i, 4, 4 + i);
   ground(L, 71, 76, 6); coins(L, 71, 74, 7);
   zip(L, 76, 9, 89, 5); trail(L, [[78, 8], [80, 7], [82, 7], [84, 6], [86, 6]]);
   pigeon(L, 84, 3);
-  vine(L, 95, 12, 6); token(L, 95, 7, 1); trail(L, [[92, 8], [93, 7], [97, 7], [98, 8]]);
-  ground(L, 100, 151, 3);
+  vine(L, 95, 12, 6); token(L, 95, 7, 1); trail(L, [[93, 7], [94, 8], [96, 8], [97, 7]]);
+  ground(L, 97, 151, 3);
   plat(L, 104, 106, 6); plat(L, 107, 109, 9); gold(L, 107, 10);
   warp(L, 109, 10, 1, 2, 157, 3, 'window');
   lizard(L, 116, 3); flyer(L, 124, 8); lizard(L, 130, 3);
@@ -1254,6 +1260,18 @@ const THEMES = [
   { name: 'bkk-golden', bkk: true, sky: ['#FF934A', '#FFBE5F', '#FF8686', '#CF4E98'], far: '#B6588A', haze: '#FFB27A', mid: '#45296A', win: '#FFC86B', sun: '#FFF0C4', brick: '#E4613F', brickD: '#B8423A', cap: '#3A2350', capL: '#5A3A78', chim: '#D27C64' },
   { name: 'bkk-night', bkk: true, night: true, sky: ['#110E33', '#271D63', '#652B84', '#DD4E8C'], far: '#3B2C76', haze: '#DD4E8C', mid: '#150F31', win: '#FFD27A', sun: '#F3F0FF', brick: '#9C4560', brickD: '#5A2A4E', cap: '#22183A', capL: '#422D66', chim: '#B0637A' },
 ];
+// bright secret-room schemes; each room gets one (see secretTheme)
+const SECRET_VARIANTS = [
+  { name: 'sec-disco', label: 'SECRET!', pattern: 'dots', pat: '#FFFFFF', lights: ['#FFE14F', '#4FE3FF', '#FFFFFF'], sky: ['#FFC2E2', '#FF9FD0', '#FF7DBE', '#F062AB'], haze: '#FF9FD0', sun: '#FFF', far: '#FF8FC7', mid: '#F06FB0', win: '#FFF3A0', brick: '#E85FA6', brickD: '#C2448A', cap: '#9E2F6E', capL: '#D45C9E', chim: '#F07DB8' },
+  { name: 'sec-aqua', label: 'SECRET!', pattern: 'stripes', pat: '#FFFFFF', lights: ['#FF6FB5', '#FFE14F', '#FFFFFF'], sky: ['#B5F6FF', '#7FE6FA', '#4FCBEF', '#2FA8E0'], haze: '#7FE6FA', sun: '#FFF', far: '#6FD8F2', mid: '#3FB4E2', win: '#FFF3A0', brick: '#2F9FD6', brickD: '#1F7AB0', cap: '#165A86', capL: '#3B8FC4', chim: '#4FB6E6' },
+  { name: 'sec-gold', label: 'JACKPOT!', pattern: 'stars', pat: '#FFFFFF', lights: ['#FF5A5A', '#FF6FB5', '#FFFFFF'], sky: ['#FFF0B0', '#FFD86B', '#FFB84A', '#FF973D'], haze: '#FFD86B', sun: '#FFF', far: '#FFC94A', mid: '#F2A43A', win: '#FFFFFF', brick: '#E8932F', brickD: '#C2701F', cap: '#8E4A14', capL: '#D07A2A', chim: '#F0A048' },
+  { name: 'sec-mint', label: 'SECRET!', pattern: 'checker', pat: '#FFFFFF', lights: ['#FF6FB5', '#FFE14F', '#7FD8FF'], sky: ['#C9FFE6', '#97F5C8', '#62DDA8', '#3FC28E'], haze: '#97F5C8', sun: '#FFF', far: '#7FEABA', mid: '#4FCF96', win: '#FFF3A0', brick: '#36B07C', brickD: '#228A5E', cap: '#156646', capL: '#3AA474', chim: '#55C892' },
+  { name: 'sec-grape', label: 'SECRET!', pattern: 'zigzag', pat: '#FFFFFF', lights: ['#7CFF6B', '#FFE14F', '#4FE3FF'], sky: ['#E2CCFF', '#C3A2FF', '#A57EFA', '#8A60EA'], haze: '#C3A2FF', sun: '#FFF', far: '#B596FF', mid: '#9876F0', win: '#FFF3A0', brick: '#8360E0', brickD: '#6444BE', cap: '#46298E', capL: '#7A58D0', chim: '#9C7EF0' },
+];
+function secretTheme(L, room) {
+  const th = L.theme || 0, i = (th % 5 + Math.floor(th / 5) * 2) % SECRET_VARIANTS.length;   // every room in a city gets a different scheme
+  return SECRET_VARIANTS[i];
+}
 const SECRET_THEME = { night: true, sky: ['#2A1A44', '#3B2457', '#5A3A78', '#7A4B8C'], haze: '#7A4B8C', sun: '#FFD978', far: '#5B3A78', mid: '#4A2E66', win: '#FFD978', brick: '#8C5A9E', brickD: '#6B4280', cap: '#3A2350', capL: '#5A3A78', chim: '#9C6AB0' };
 
 function rr(x, y, w, h, r) {
@@ -1769,7 +1787,7 @@ function makeLayer(th, far, h) {
   return c;
 }
 function drawBackground(th, camX, camY, maxCamY, t, secret) {
-  const key = (secret ? 'secret' : th.name) + VW + 'x' + VH + '@' + DPR;
+  const key = (secret ? 'secret-' + th.name : th.name) + VW + 'x' + VH + '@' + DPR;
   if (BGC.key !== key) { BGC = { key, far: makeLayer(th, true, VH * 0.85), mid: makeLayer(th, false, VH * 0.75) }; }
   const sg = ctx.createLinearGradient(0, 0, 0, VH); th.sky.forEach((c, i) => sg.addColorStop(i / (th.sky.length - 1), c));
   ctx.fillStyle = sg; ctx.fillRect(0, 0, VW, VH);
@@ -2343,8 +2361,10 @@ function addProfile(name) { SAVE.profiles.push({ name, diff: 'normal', levels: {
 function levelRec(id) { const p = prof(); return p ? p.levels[id] : null; }
 function starsFor(rec) { if (!rec || !rec.cleared) return 0; return 1 + (rec.tokens.every(Boolean) ? 1 : 0) + (rec.timeStar ? 1 : 0); }
 function totalStars(p) { let n = 0; for (const k in p.levels) n += starsFor(p.levels[k]); return n; }
+const TEST_UNLOCK = /[?&](unlock|test)\b/.test((window.location && window.location.search) || '');
 function unlocked(wi, li) {
   if (wi === 0 && li === 0) return true;
+  if (TEST_UNLOCK && WORLDS[wi].ready) return true;
   const w = WORLDS[wi]; if (!w.ready) return false;
   if (li === 0) { const pw = WORLDS[wi - 1]; return !!(levelRec(pw.levels[pw.levels.length - 1].id) || {}).cleared; }
   return !!(levelRec(w.levels[li - 1].id) || {}).cleared;
@@ -2752,6 +2772,12 @@ function collectFish(n, x, y, gid) {
   g.chain = g.t - g.chainT < 40 ? g.chain + 1 : 0; g.chainT = g.t;
   g.streak = g.t - g.streakT < 50 ? g.streak + n : n; g.streakT = g.t;
   addFish(n); SFX.note(g.chain);
+  // sparkle: big bright stars fly out, plus a gold flash ring
+  for (let i = 0, m = 8 + Math.min(n, 6); i < m; i++) { const ang = i / m * Math.PI * 2 + Math.random() * 0.3, sp = 3 + Math.random() * 1.6;
+    g.parts.push({ x, y: y + 8, vx: Math.cos(ang) * sp, vy: Math.sin(ang) * sp - 1, life: 24, t: 0, c: i % 3 ? '#FFD23F' : '#FFFFFF', s: 3.5 + Math.random() * 1.5, g: 0.05, kind: 'star', r: 0 }); }
+  g.parts.push({ x, y: y + 8, vx: 0, vy: 0, life: 20, t: 0, c: '#FFE14F', s: 1, g: 0, kind: 'ring', r: 0 });
+  g.parts.push({ x, y: y + 8, vx: 0, vy: 0, life: 10, t: 0, c: '#FFFFFF', s: 1, g: 0, kind: 'flash', r: 0 });
+  g.fishBump = 10;
   if (n > 1) popWord(x, y, '+' + n, COL.sun, 14);
   if (g.streak >= 10 && Math.floor(g.streak / 10) > Math.floor((g.streak - n) / 10)) {
     const k = Math.floor(g.streak / 10);
@@ -3291,7 +3317,7 @@ function closeName(to) {
 let pageBg = '';
 function syncPageBg() {
   let c = '#7E5670';
-  if ((S === 'play' || S === 'pause' || S === 'clear') && G) { const r = roomFor(G.p.x + G.p.w / 2); c = r.secret ? SECRET_THEME.brickD : THEMES[G.L.theme].brickD; }
+  if ((S === 'play' || S === 'pause' || S === 'clear') && G) { const r = roomFor(G.p.x + G.p.w / 2); c = r.secret ? secretTheme(G.L, r).brickD : THEMES[G.L.theme].brickD; }
   else if (S === 'map' || S === 'album') c = '#3A2350';
   if (c !== pageBg) { pageBg = c; document.documentElement.style.background = c; document.body.style.background = c; }
 }
@@ -3328,7 +3354,7 @@ function renderPlay(frozen) {
   const g = G; if (!g) return;
   const L = g.L, p = g.p;
   const room = roomFor(p.x + p.w / 2);
-  const th = room.secret ? SECRET_THEME : THEMES[L.theme];
+  const th = room.secret ? secretTheme(L, room) : THEMES[L.theme];
   drawBackground(th, g.cam.x, g.cam.y, L.h * T - VH / SCALE, g.t, !!room.secret);
   if (!room.secret && g.flocks) drawFlocks(g.flocks, g.t);
   const k = DPR * SCALE;
@@ -3407,6 +3433,8 @@ function drawPart(q) {
   ctx.save(); ctx.globalAlpha = Math.max(0, a);
   if (q.kind === 'star') { starPath(q.x, q.y, q.s + 2, (q.s + 2) * 0.45); ctx.fillStyle = q.c; ctx.fill(); }
   else if (q.kind === 'feather') { el(q.x, q.y, q.s + 2, q.s * 0.6, q.r); ctx.fillStyle = q.c; ctx.fill(); }
+  else if (q.kind === 'flash') { const k = q.t / q.life; ctx.save(); ctx.globalAlpha = 0.9 * (1 - k); ci(q.x, q.y, 10 + k * 8); ctx.fillStyle = '#FFFBE0'; ctx.fill(); ctx.restore(); }
+  else if (q.kind === 'ring') { const k = q.t / q.life; ctx.save(); ctx.globalAlpha = 1 - k; ctx.strokeStyle = q.c; ctx.lineWidth = 4.5 * (1 - k) + 1.5; ci(q.x, q.y, 8 + k * 34); ctx.stroke(); ctx.restore(); }
   else if (q.kind === 'note') { ctx.fillStyle = q.c; ctx.font = '700 ' + Math.round(10 + q.s * 2) + 'px ' + FB; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText('♪', q.x, q.y); }
   else if (q.kind === 'fish') { ctx.globalAlpha = 1; drawFish(q.x, q.y, 0); }
   else { ci(q.x, q.y, q.s * (0.5 + a * 0.5)); ctx.fillStyle = q.c; ctx.fill(); }
@@ -3462,8 +3490,9 @@ function drawVine(v, g) {
   const held = g.p.vine >= 0 && g.L.vines[g.p.vine] === v;
   const r = held ? g.p.vr : v.len;
   const tx = v.ax + Math.sin(v.ang) * r, ty = v.ay + Math.cos(v.ang) * r;
-  ink(4); ctx.beginPath(); ctx.moveTo(v.ax, v.ay - 2); ctx.lineTo(v.ax, v.ay - 46); ctx.stroke();
-  ctx.strokeStyle = '#B7C2D6'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(v.ax, v.ay - 2); ctx.lineTo(v.ax, v.ay - 46); ctx.stroke();
+  const pl = v.pole || 46;
+  ink(4); ctx.beginPath(); ctx.moveTo(v.ax, v.ay - 2); ctx.lineTo(v.ax, v.ay - pl); ctx.stroke();
+  ctx.strokeStyle = '#B7C2D6'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(v.ax, v.ay - 2); ctx.lineTo(v.ax, v.ay - pl); ctx.stroke();
   ink(3); ctx.beginPath(); ctx.moveTo(v.ax - 14, v.ay - 40); ctx.lineTo(v.ax + 14, v.ay - 40); ctx.moveTo(v.ax - 9, v.ay - 30); ctx.lineTo(v.ax + 9, v.ay - 30); ctx.stroke();
   ci(v.ax, v.ay, 4.5); fs('#B7C2D6', 2.2);
   const midx = (v.ax + tx) / 2 + Math.cos(v.ang) * (held ? 0 : 6), midy = (v.ay + ty) / 2;
@@ -3587,7 +3616,8 @@ function renderHUD() {
     ctx.restore();
   }
   ctx.save(); ctx.translate(lx + 14 * U, ty + 44 * U); ctx.scale(1.1, 1.1); drawFish(0, 0, 0); ctx.restore();
-  flatText(String(g.fish), lx + 32 * U, ty + 45 * U, Math.round(20 * U), '#FFF3E0', 'left', '800 ' + FB);
+  if (g.fishBump > 0) g.fishBump--;
+  flatText(String(g.fish), lx + 32 * U, ty + 45 * U, Math.round(20 * U * (1 + (g.fishBump || 0) * 0.025)), (g.fishBump || 0) > 4 ? COL.sun : '#FFF3E0', 'left', '800 ' + FB);
   if (g.streak >= 3 && g.t - g.streakT < 50) {
     const a = 1 - (g.t - g.streakT) / 50;
     ctx.save(); ctx.globalAlpha = 0.4 + a * 0.6; flatText('streak ' + g.streak, lx + 80 * U, ty + 45 * U, Math.round(15 * U), COL.sun, 'left', '800 ' + FB); ctx.restore();
@@ -3609,10 +3639,12 @@ function renderHUD() {
   }
   if (p.zoom > 0) flatText('Rainbow Zoomies ' + Math.ceil(p.zoom / 60), VW / 2, ty + (g.pouch.length ? 70 : 14) * U, Math.round(14 * U), COL.sun, 'center', '800 ' + FB);
   // pause + music/sound buttons
-  const pr = 22 * U, pcx = VW - SAFE.r - m - pr, pcy = ty + pr;
-  ci(pcx, pcy, pr); ctx.fillStyle = 'rgba(27,20,40,.35)'; ctx.fill(); ctx.lineWidth = 2; ctx.strokeStyle = 'rgba(255,243,224,.8)'; ctx.stroke();
-  ctx.fillStyle = '#FFF3E0'; ctx.fillRect(pcx - 6 * U, pcy - 8 * U, 4 * U, 16 * U); ctx.fillRect(pcx + 2 * U, pcy - 8 * U, 4 * U, 16 * U);
-  HUDBTN.push({ x: pcx - pr, y: pcy - pr, w: pr * 2, h: pr * 2, fn: () => { if (S === 'play') { S = 'pause'; clearInputs(); } } });
+  const pr = 22 * U, mw = 104 * U, mx = VW - SAFE.r - m - mw, pcy = ty + pr;
+  rr(mx, ty, mw, pr * 2, pr); ctx.fillStyle = 'rgba(27,20,40,.45)'; ctx.fill(); ctx.lineWidth = 2; ctx.strokeStyle = 'rgba(255,243,224,.85)'; ctx.stroke();
+  ctx.fillStyle = '#FFF3E0'; for (let i = -1; i <= 1; i++) rr(mx + 16 * U, pcy + i * 6 * U - 1.5 * U, 18 * U, 3 * U, 1.5 * U), ctx.fill();
+  flatText('Menu', mx + 42 * U, pcy + 1, Math.round(17 * U), '#FFF3E0', 'left', '800 ' + FB);
+  HUDBTN.push({ x: mx, y: ty, w: mw, h: pr * 2, fn: () => { if (S === 'play') { S = 'pause'; clearInputs(); } } });
+  const pcx = mx + pr;
   const after = soundButtons(pcx - pr - 8 * U, pcy, 17 * U, HUDBTN);
   // finds: silhouettes of this level's three hidden items
   const tr = ALBUM[g.def.id] || [];
@@ -3907,6 +3939,7 @@ function renderMap() {
   ctx.fillStyle = 'rgba(27,20,40,.35)'; ctx.fillText(w.name, VW / 2 + 2, ty2 + 3); ctx.fillStyle = '#FFF3E0'; ctx.fillText(w.name, VW / 2, ty2);
   const sy = ty2 + Math.min(48 * U, VH * 0.07) * 0.5 + 22 * U, aw = 30 * U;
   const wl = 'City ' + w.n + ' of ' + WORLDS.length + (w.ready && pr ? '   ·   ★ ' + w.levels.reduce((n, l) => n + starsFor(levelRec(l.id)), 0) + ' of ' + w.levels.length * 3 : '');
+  if (TEST_UNLOCK) flatText('TEST MODE: every level unlocked', VW / 2, sy + 26 * U, Math.round(12 * U), COL.sun, 'center', '800 ' + FB);
   flatText(wl, VW / 2, sy, Math.round(14 * U), '#FFF3E0', 'center', '800 ' + FB);
   ctx.font = '800 ' + Math.round(14 * U) + 'px ' + FB; const half = ctx.measureText(wl).width / 2 + 14 * U;
   if (mapW > 0) arrowBtn(VW / 2 - half - aw, sy - aw / 2, aw, -1, () => { mapW--; mapSel = WORLDS[mapW].ready ? firstOpenLevel(mapW) : 0; });
@@ -4071,30 +4104,45 @@ function drawStaticChunks(L, th, key, x0, x1) {
 
 // secret rooms feel like a party: sweeping spotlights, string lights, sparkles and a neon sign
 function drawPartyRoom(room, L, t) {
-  const x0 = room.x0 + 2 * T, x1 = room.x1 - T, top = 3 * T, floor = (L.h - 3) * T, w = x1 - x0;
+  const th = secretTheme(L, room), x0 = room.x0 + 2 * T, x1 = room.x1 - T, top = 3 * T, floor = (L.h - 3) * T, w = x1 - x0;
   ctx.save();
+  // wallpaper
+  ctx.globalAlpha = 0.22; ctx.fillStyle = th.pat;
+  if (th.pattern === 'stripes') for (let x = x0; x < x1; x += 40) ctx.fillRect(x, top, 18, floor - top);
+  else if (th.pattern === 'dots') for (let y = top + 20; y < floor; y += 36) for (let x = x0 + ((y / 36) % 2) * 18; x < x1; x += 36) { ci(x, y, 7); ctx.fill(); }
+  else if (th.pattern === 'checker') for (let y = top; y < floor; y += 32) for (let x = x0 + (((y - top) / 32) % 2) * 32; x < x1; x += 64) ctx.fillRect(x, y, 32, 32);
+  else if (th.pattern === 'stars') for (let y = top + 24; y < floor; y += 48) for (let x = x0 + ((y / 48) % 2) * 24; x < x1; x += 48) { starPath(x, y, 9, 4); ctx.fill(); }
+  else for (let y = top + 10; y < floor; y += 30) { ctx.beginPath(); for (let x = x0; x <= x1; x += 15) ctx.lineTo(x, y + ((x - x0) / 15 % 2 ? 10 : 0)); ctx.lineWidth = 5; ctx.strokeStyle = th.pat; ctx.stroke(); }
+  ctx.globalAlpha = 1;
+  // sweeping spotlights in the room's colours
   for (let i = 0; i < 3; i++) {
     const bx = x0 + w * (0.2 + i * 0.3), a = Math.sin(t * 0.02 + i * 2) * 0.5;
     ctx.save(); ctx.translate(bx, top + 40); ctx.rotate(a);
     const gr = ctx.createLinearGradient(0, 0, 0, floor - top);
-    gr.addColorStop(0, ['rgba(255,111,181,.35)', 'rgba(95,180,255,.35)', 'rgba(255,210,63,.35)'][i]); gr.addColorStop(1, 'rgba(255,255,255,0)');
-    ctx.fillStyle = gr; ctx.beginPath(); ctx.moveTo(-8, 0); ctx.lineTo(8, 0); ctx.lineTo(90, floor - top); ctx.lineTo(-90, floor - top); ctx.closePath(); ctx.fill(); ctx.restore();
+    gr.addColorStop(0, th.lights[i] + '88'); gr.addColorStop(1, 'rgba(255,255,255,0)');
+    ctx.fillStyle = gr; ctx.beginPath(); ctx.moveTo(-10, 0); ctx.lineTo(10, 0); ctx.lineTo(110, floor - top); ctx.lineTo(-110, floor - top); ctx.closePath(); ctx.fill(); ctx.restore();
   }
-  // string lights
+  // big string lights
   for (let k = 0; k < 2; k++) {
-    const y = top + 70 + k * 30; ctx.strokeStyle = 'rgba(20,16,32,.7)'; ctx.lineWidth = 1.5; ctx.beginPath();
+    const y = top + 74 + k * 34; ctx.strokeStyle = 'rgba(20,16,32,.6)'; ctx.lineWidth = 1.5; ctx.beginPath();
     for (let x = x0; x <= x1; x += 8) ctx.lineTo(x, y + Math.sin((x - x0) / w * Math.PI * 4) * 10); ctx.stroke();
-    for (let x = x0 + 12; x < x1; x += 34) { const on = Math.floor(t / 12 + x / 34 + k) % 3; ci(x, y + Math.sin((x - x0) / w * Math.PI * 4) * 10 + 4, 4); ctx.fillStyle = ['#FFD23F', '#FF6FB5', '#5FE0FF'][on]; ctx.fill(); }
+    for (let x = x0 + 12; x < x1; x += 30) { const on = Math.floor(t / 10 + x / 30 + k) % 3; ci(x, y + Math.sin((x - x0) / w * Math.PI * 4) * 10 + 5, 6); ctx.fillStyle = th.lights[on]; ctx.fill(); ci(x - 2, y + Math.sin((x - x0) / w * Math.PI * 4) * 10 + 3, 2); ctx.fillStyle = '#FFFFFF'; ctx.fill(); }
   }
+  // disco ball with light spots
+  const dx = x0 + w * 0.5, dy = top + 120;
+  ctx.strokeStyle = 'rgba(20,16,32,.7)'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(dx, top); ctx.lineTo(dx, dy - 20); ctx.stroke();
+  ci(dx, dy, 20); ctx.fillStyle = '#E6EAF2'; ctx.fill(); ink(2.2); ctx.stroke();
+  ctx.save(); ci(dx, dy, 20); ctx.clip(); ctx.fillStyle = 'rgba(120,130,160,.5)';
+  for (let yy = -20; yy < 20; yy += 6) for (let xx = -20 + ((t * 0.3) % 6); xx < 20; xx += 6) ctx.fillRect(dx + xx, dy + yy, 4, 4); ctx.restore();
+  for (let i = 0; i < 14; i++) { const a = t * 0.01 + i * 0.45, r = 80 + (i * 37) % 220; ci(dx + Math.cos(a) * r, dy + Math.sin(a) * r * 0.6 + 60, 4); ctx.fillStyle = th.lights[i % 3] + 'AA'; ctx.fill(); }
   // neon sign
-  const nx = x0 + w / 2, ny = top + 30;
-  const onAir = THEMES[L.theme] && THEMES[L.theme].nash, nc = onAir ? '#FF3B3B' : '#FF5FA2';
-  ctx.shadowColor = nc; ctx.shadowBlur = 14 + Math.sin(t * 0.2) * 4;
-  rr(nx - 70, ny - 18, 140, 36, 10); ctx.fillStyle = '#1A1230'; ctx.fill(); ctx.lineWidth = 3; ctx.strokeStyle = nc; ctx.stroke();
-  ctx.fillStyle = onAir ? '#FFB0A8' : '#FFB3D9'; ctx.font = '700 22px ' + FD; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(onAir ? 'ON AIR' : 'SECRET!', nx, ny + 1);
+  const onAir = THEMES[L.theme] && THEMES[L.theme].nash, nc = onAir ? '#FF3B3B' : th.lights[0];
+  const nx = x0 + w / 2, ny = top + 34;
+  ctx.shadowColor = nc; ctx.shadowBlur = 16 + Math.sin(t * 0.2) * 4;
+  rr(nx - 76, ny - 20, 152, 40, 12); ctx.fillStyle = '#1A1230'; ctx.fill(); ctx.lineWidth = 3; ctx.strokeStyle = nc; ctx.stroke();
+  ctx.fillStyle = onAir ? '#FFB0A8' : '#FFFFFF'; ctx.font = '700 24px ' + FD; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(onAir ? 'ON AIR' : th.label, nx, ny + 1);
   ctx.shadowBlur = 0;
-  // drifting sparkles
-  for (let i = 0; i < 18; i++) { const sx = x0 + ((i * 97 + t * 0.6) % w), sy = top + 60 + ((i * 53 + t * 0.4) % (floor - top - 80)); ctx.globalAlpha = 0.4 + 0.4 * Math.sin(t * 0.1 + i); starPath(sx, sy, 3.5, 1.5); ctx.fillStyle = '#FFF3C4'; ctx.fill(); }
+  for (let i = 0; i < 22; i++) { const sx = x0 + ((i * 97 + t * 0.6) % w), sy = top + 60 + ((i * 53 + t * 0.4) % (floor - top - 80)); ctx.globalAlpha = 0.5 + 0.4 * Math.sin(t * 0.1 + i); starPath(sx, sy, 4, 1.7); ctx.fillStyle = '#FFFFFF'; ctx.fill(); }
   ctx.restore();
 }
 

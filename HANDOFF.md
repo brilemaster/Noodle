@@ -1,10 +1,14 @@
 # Noodle and the Sunbeam Heist — handoff guide
 
-Current version: **v23** (shown bottom-right of the title screen). Check a deploy with `?v=23`.
+Current version: **v25** (shown bottom-right of the title screen). Check a deploy with `?v=25`.
+
+**Test mode:** add `?unlock` (or `&unlock`) to the link, e.g. `https://brilemaster.github.io/Noodle/?v=25&unlock`, to open every built level without saving anything as cleared. The map shows "TEST MODE". Remove it from the link to play normally.
 
 ## Changelog
 - v1: World 1 built.
 - v2: game-feel update (owner asked: keep art, make it feel like a snappy Mario game). New movement physics, animation, juice, power-ups, treasures, flagpole, HUD clarity.
+- v25: fixed 2-3 Tangled Wires gaps a real player couldn't cross (the 9-tile single-cable gap is now 4 tiles; first gap 7→5; long double-cable gap split by a rooftop island). New `test/gaps.js` flags open gaps wider than 5 tiles with no helper (the reachability checker can find frame-perfect routes humans can't). Added `?unlock` test mode (`TEST_UNLOCK`).
+- v24: in-game **☰ Menu** pill at top-right (replaces the round pause icon; opens Resume / Restart level / World map / Home). Secret rooms: five bright schemes in `SECRET_VARIANTS` (Disco Pink dots, Aqua Arcade stripes, Golden JACKPOT! stars, Mint Jam checker, Neon Grape zigzag), one per level via `secretTheme(L, room)` so every room in a city differs; wallpaper pattern, disco ball with light spots, brighter spotlights, bigger string lights; Nashville rooms still say ON AIR. `secretRoom()` adds two tiles of headroom; vine poles extend up to the ceiling (`v.pole`). Fish collection sparkle: burst of big gold/white stars, gold shimmer ring, quick white flash, and the HUD fish count bumps and flashes gold (`g.fishBump`). All ten levels re-checked.
 - v23: near skyline raised further (`MIDY = -VH*0.2`), with the strip under the raised layer filled in the layer colour so no gap shows. Browser zoom fix from v22 kept.
 - v22: same look on every browser. Brave on iPad (page zoom below 100% / desktop mode) made the page report a bigger viewport than the real screen, so everything rendered smaller. `resize()` now detects that on touch devices (viewport larger than `screen`), computes `ZF` (zoom factor, 0.5–1), sizes the game in real-screen units (`VW/VH = css × ZF`, `DPR = devicePixelRatio / ZF`) and scales touch/click coordinates by `ZF`. Tested by simulating 85% zoom: identical layout and taps register.
 - v21: readability: the near skyline layer is raised (`MIDY = -VH*0.1` in drawBackground; EQ meters, notes and SkyTrain use the same offset) and a soft haze gradient covers the lower 45% of the screen behind the action, so busy buildings never compete with Noodle. Applies to every city. Owner rule: backgrounds must never make the action hard to read.
