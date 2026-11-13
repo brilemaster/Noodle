@@ -42,7 +42,7 @@ canvas{position:fixed;left:0;top:0;display:block;touch-action:none}
 <script>
 'use strict';
 // ================= CORE: constants, physics, level data =================
-const VERSION = 15;
+const VERSION = 16;
 const T = 32;          // tile size in world units
 const LH = 16;         // level height in tiles
 const clamp = (v, a, b) => v < a ? a : (v > b ? b : v);
@@ -1907,7 +1907,7 @@ function readInput() {
 function ctrlLayout() {
   const bs = clamp(Math.min(VH * 0.25, VW * 0.135), 62, 118);
   const m = 6;
-  const by = VH - SAFE.b - m - bs / 2;
+  const by = VH - Math.min(SAFE.b, 4) - bs * 0.44;   // low, right where thumbs rest
   const lx = SAFE.l + m + bs / 2, rx = lx + bs * 1.08;
   const jx = VW - SAFE.r - m - bs / 2;
   const as = bs * 0.74, ax = jx - bs / 2 - as / 2 - 14, ay = by + (bs - as) / 2;

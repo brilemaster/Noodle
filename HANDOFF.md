@@ -1,10 +1,11 @@
 # Noodle and the Sunbeam Heist — handoff guide
 
-Current version: **v15** (shown bottom-right of the title screen). Check a deploy with `?v=15`.
+Current version: **v16** (shown bottom-right of the title screen). Check a deploy with `?v=16`.
 
 ## Changelog
 - v1: World 1 built.
 - v2: game-feel update (owner asked: keep art, make it feel like a snappy Mario game). New movement physics, animation, juice, power-ups, treasures, flagpole, HUD clarity.
+- v16: touch buttons moved down to the bottom edge (centre at ~44% of button size from the bottom, ignoring most of the home-indicator inset) for comfier thumbs. Tap zones unchanged.
 - v15: City 1 is now **Magnolia Holler**, Noodle's small Southern hometown (Mayberry feel, KY/TN/AL mix): rolling hills, Main Street storefronts with awnings, gabled porch houses, oaks, courthouse clock tower, MAGNOLIA HOLLER water tower, tin roofs, a HOWDY! biplane banner, neighbors calling out greetings (`greet()` deco), Miss Pearl (neighbor) in the intro. Levels renamed: Main Street Mornin', Porch Hop, Telephone Lines, Feed Store Flip, Behind the Diner (Rocco). Ending: Noodle naps on a warm jar crate, wakes up in Bangkok. Map lists six cities.
 - v14: Home Screen bottom strip: root cause is iPadOS standalone + `black-translucent` status bar leaving a strip below the web view. Switched `apple-mobile-web-app-status-bar-style` to `black` (owner must delete and re-add the Home Screen icon for iOS to pick it up), sizing back to the visible area (min of visualViewport/innerHeight), and the page background now follows the bottom colour of the current scene (`syncPageBg`). World map redrawn as rooftops (one building per level, jump arcs, sunbeam on the chosen roof, boss building with a flag); level numbers like "1-1" removed from the UI; "World" wording changed to "City". **Owner direction:** worlds become cities. Start in American cities, travel abroad, return to America; ~5 levels per city. Owner has specific cities in mind (ask for the list).
 - v13: story rewritten so it's clear Noodle can only nap properly in a sunbeam (new lines in `SCENES`). Sun patches (`sunspot()`) on rooftops: stand still in one for ~1.5s and Noodle naps ("Ahh… sun."); in shade Noodle only yawns. Empty sunshine jars (`addJars()`) dot each level along the thief's trail. On the map, Noodle dozes if you leave it alone ~5s. Dialog text now wraps with the same font it draws (no overflow under Next).
