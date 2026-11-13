@@ -1,12 +1,13 @@
 # Noodle and the Sunbeam Heist — handoff guide
 
-Current version: **v30** (shown bottom-right of the title screen). Check a deploy with `?v=30`.
+Current version: **v31** (shown bottom-right of the title screen). Check a deploy with `?v=31`.
 
-**Test mode:** add `?unlock` (or `&unlock`) to the link, e.g. `https://brilemaster.github.io/Noodle/?v=30&unlock`, to open every built level without saving anything as cleared. The map shows "TEST MODE". Remove it from the link to play normally.
+**Test mode:** add `?unlock` (or `&unlock`) to the link, e.g. `https://brilemaster.github.io/Noodle/?v=31&unlock`, to open every built level without saving anything as cleared. The map shows "TEST MODE". Remove it from the link to play normally.
 
 ## Changelog
 - v1: World 1 built.
 - v2: game-feel update (owner asked: keep art, make it feel like a snappy Mario game). New movement physics, animation, juice, power-ups, treasures, flagpole, HUD clarity.
+- v31: **City 4: Phuket built**; route changed by owner: **Krabi and Koh Samui removed**; after Phuket Noodles naps in a carry-on and flies to **City 5: Seoul (Incheon) Airport**, the final stop of the Thailand trip. Phuket levels: 4-1 Patong Beach, 4-2 Resort Pools, 4-3 Old Town Colors, 4-4 Promthep Sunset, 4-5 Monkey Hill (boss Sheldon the hermit crab, `arena.kind = 'crab'`: sandcastles, coconuts, admires the jar as a roomy shell). Themes 15–19 (`pk: true`, appended in order): sea horizon with limestone karst islands and longtail boats, palms, pastel Sino-Portuguese shophouses, beach umbrellas, sandy ledges, palm-frond springs. New: **pools** (`pool(L, x0, x1, s, depth)`; buoyant water, never damps a jump out, soaks Noodles; checker treats floating as a place to jump from via `p.inPool`), **pool floats** (balloons drawn as flamingo/donut rings in Phuket), **mangoes** (gold items drawn as mangoes in Phuket, worth 5), **mango-tossing monkeys** (`tosser()`, lobbed arcs, hit = "Bonk!" knockback only; yarn = "Eek!"). Kiki now points to Phuket; scenes w4tease (bus south), pk1, crab1, crab2, w5tease (carry-on to Seoul). Song `island`. 15 new finds.
 - v30: skyline lifted everywhere (near layer `MIDY` −0.3·VH, phones −0.38·VH; far layer `FARY` −0.1·VH, phones −0.16·VH) and phone haze starts higher (0.4·VH) and stronger. **Full screen + landscape:** tapping Play on a touch device calls `goFullscreen()` (Fullscreen API + `screen.orientation.lock('landscape')` where allowed: Android, iPad Safari/Chrome, desktop); title has a ⤢ Full screen / ⤡ Exit button when available; iPhone browsers (no Fullscreen API) get a tip to Add to Home Screen; inline manifest says display fullscreen, orientation landscape; the rotate-your-device screen now triggers on any touch device held upright (`TOUCH_DEV`).
 - v29: same size with or without browser bars. Non-phone `SCALE = min(VW/(22.5·T), VH/(11·T))` (width-led; ~22.5 tiles across, at least 11 tall) instead of height-led, and touch buttons size from `min(VH·0.16, VW·0.085)`. Owner's preferred look is the full-screen Home Screen app; a Chrome tab now matches it (just shows a little less sky). Phones unchanged.
 - v28: **City 3: Chiang Mai built.** Levels 3-1 Old City Walls, 3-2 Elephant Trek, 3-3 Waterfall Jungle, 3-4 Yi Peng Night, 3-5 Temple Steps (boss Kiki the macaque). Themes 10–14 (`cm: true`; THEMES must stay in index order, new cities append at the end): misty mountain ridges with a golden temple on a peak, jungle trees, bamboo, Lanna stilt houses with lantern strings, mossy grass ledges, bamboo springs; Yi Peng night has dozens of sky lanterns rising. New: **macaques** (`monkey()`, walk and hop, stompable), **waterfalls** (`waterfall()`, fan with `down: true` pushes you down), **baby elephant** ride (`ele()`, `L.drone.kind = 'ele'`, ground ride, top speed 5.4, bumps macaques aside), balloons drawn as bouncy paper lanterns in Chiang Mai. Kiki reuses the boss engine (`arena.kind = 'kiki'`: mango baskets, mango throws, admires a shiny jar when bop-able). Scenes: w3tease (night train north), cm1, ele, kiki1, kiki2, w4tease (Krabi teaser). Song `lanna`. 15 new finds with icons.
@@ -46,6 +47,9 @@ A Mario-style browser platformer for friends and family (teens and adults). One 
 
 ## Content rules (updated by owner)
 - The original "no holidays, no magic, no luck themes" rules are **lifted**. Holidays/festivals (e.g. Songkran, Yi Peng/Loy Krathong), magical touches and lucky items are all fine. Owner: "No boundaries here, let's get fun." Still keep it family-friendly. Temples stay as background scenery (cultural courtesy).
+
+## Next build: City 5, Seoul (Incheon) Airport (owner's brief)
+Final "city" of the Thailand trip. Noodles roams a pleasant, bustling airport with gentle little mall music. Little carts roll around but never hit you; people stay out of your way but it's busy and alive. (Moving walkways, departure boards, duty-free shops, big windows with planes are natural fits.) Keep it calm and friendly, no harsh hazards.
 
 ## The journey (approved plan)
 1. **Nashville** (home, v20; was Magnolia Holler in v15) → nap on a jar crate at the Nashville airport → cargo plane.
