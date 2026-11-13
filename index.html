@@ -42,7 +42,7 @@ canvas{position:fixed;left:0;top:0;display:block;touch-action:none}
 <script>
 'use strict';
 // ================= CORE: constants, physics, level data =================
-const VERSION = 21;
+const VERSION = 23;
 const T = 32;          // tile size in world units
 const LH = 16;         // level height in tiles
 const clamp = (v, a, b) => v < a ? a : (v > b ? b : v);
@@ -1800,8 +1800,9 @@ function drawBackground(th, camX, camY, maxCamY, t, secret) {
   // atmospheric haze between the far and near skylines
   const hz = ctx.createLinearGradient(0, VH * 0.4, 0, VH * 0.85); hz.addColorStop(0, 'rgba(0,0,0,0)'); hz.addColorStop(1, th.haze || '#FFFFFF');
   ctx.save(); ctx.globalAlpha = 0.35; ctx.fillStyle = hz; ctx.fillRect(0, VH * 0.4, VW, VH * 0.6); ctx.restore();
-  const MIDY = -VH * 0.1;   // near skyline sits higher so its busy details stay above the action
+  const MIDY = -VH * 0.2;   // near skyline sits well above the action
   lay(BGC.mid, 0.35, VH * 0.75, MIDY, 1);
+  { const yb = VH + dy * 0.35 * 0.6 + MIDY - 1; if (yb < VH) { ctx.fillStyle = th.mid; ctx.fillRect(0, yb, VW, VH - yb); } }   // no gap under the raised buildings
   if (!secret) liveSkyline(BGC.mid, 0.35, VH * 0.75, MIDY, camX, dy, t);
   if (!secret) {
     const hz2 = ctx.createLinearGradient(0, VH * 0.55, 0, VH);
@@ -2296,19 +2297,33 @@ let VW = 800, VH = 450, DPR = 1, SCALE = 1, U = 1;
 const SAFE = { l: 0, r: 0, t: 0, b: 0 };
 let showTouch = ('ontouchstart' in window) || (navigator.maxTouchPoints || 0) > 0;
 
+let ZF = 1;   // browser page-zoom correction (Brave/desktop-mode zoom-out on tablets)
 function resize() {
   const vv = window.visualViewport;
-  VW = Math.max(200, Math.round(Math.min(vv ? vv.width : 1e9, window.innerWidth)));
-  VH = Math.max(150, Math.round(Math.min(vv ? vv.height : 1e9, window.innerHeight)));
-  DPR = Math.min(window.devicePixelRatio || 1, 2);
-  cv.width = Math.round(VW * DPR); cv.height = Math.round(VH * DPR);
-  cv.style.width = VW + 'px'; cv.style.height = VH + 'px';
-  // zoom from the real visible height: phones see ~9 tiles, big screens up to 15
+  const cw = Math.max(200, Math.round(Math.min(vv ? vv.width : 1e9, window.innerWidth)));
+  const ch = Math.max(150, Math.round(Math.min(vv ? vv.height : 1e9, window.innerHeight)));
+  // If a touch browser reports a page bigger than the real screen, it is zoomed out: size the game to the
+  // real screen instead, so it looks the same in Safari, Chrome, Brave and from the Home Screen.
+  ZF = 1;
+  const touch = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
+  if (touch && window.screen && screen.width && screen.height) {
+    const land = cw > ch, sw = land ? Math.max(screen.width, screen.height) : Math.min(screen.width, screen.height);
+    const sh = land ? Math.min(screen.width, screen.height) : Math.max(screen.width, screen.height);
+    if (cw > sw + 8) ZF = Math.min(ZF, sw / cw);
+    if (ch > sh + 8) ZF = Math.min(ZF, sh / ch);
+    ZF = clamp(ZF, 0.5, 1);
+  }
+  VW = Math.round(cw * ZF); VH = Math.round(ch * ZF);
+  const devR = Math.min(window.devicePixelRatio || 1, 2);
+  cv.width = Math.round(cw * devR); cv.height = Math.round(ch * devR);
+  cv.style.width = cw + 'px'; cv.style.height = ch + 'px';
+  DPR = devR / ZF;   // all drawing happens in game units; this maps them onto the real canvas pixels
+  // zoom from the real visible height: phones see ~11 tiles, big screens up to 15.5
   const phone = VH < 520;
   SCALE = phone ? VH / (11 * T) : Math.max(VH / (15.5 * T), Math.min(VH / (LH * T), VW / (30 * T)));
   U = clamp(Math.min(VW, VH * 1.7) / 660, 0.72, 1.8);
   const sd = document.getElementById('safe');
-  if (sd) { const cs = getComputedStyle(sd); SAFE.t = parseFloat(cs.paddingTop) || 0; SAFE.r = parseFloat(cs.paddingRight) || 0; SAFE.b = parseFloat(cs.paddingBottom) || 0; SAFE.l = parseFloat(cs.paddingLeft) || 0; }
+  if (sd) { const cs = getComputedStyle(sd); SAFE.t = (parseFloat(cs.paddingTop) || 0) * ZF; SAFE.r = (parseFloat(cs.paddingRight) || 0) * ZF; SAFE.b = (parseFloat(cs.paddingBottom) || 0) * ZF; SAFE.l = (parseFloat(cs.paddingLeft) || 0) * ZF; }
   SAFE.b = Math.min(SAFE.b, 24);
   if (window.scrollTo) window.scrollTo(0, 0);
 }
@@ -2385,7 +2400,7 @@ function startTouchControl(id, x, y) {
   touches.set(id, { group, zone: zoneFor(group, x, y) });
   return true;
 }
-function tpos(t) { const r = cv.getBoundingClientRect(); return { x: t.clientX - r.left, y: t.clientY - r.top }; }
+function tpos(t) { const r = cv.getBoundingClientRect(); return { x: (t.clientX - r.left) * ZF, y: (t.clientY - r.top) * ZF }; }
 cv.addEventListener('touchstart', e => {
   e.preventDefault(); firstGesture(); showTouch = true;
   for (const t of e.changedTouches) {
@@ -2408,7 +2423,7 @@ function touchEnd(e) {
 cv.addEventListener('touchend', touchEnd, { passive: false });
 cv.addEventListener('touchcancel', touchEnd, { passive: false });
 cv.addEventListener('mousedown', e => {
-  firstGesture(); const r = cv.getBoundingClientRect(); const x = e.clientX - r.left, y = e.clientY - r.top;
+  firstGesture(); const r = cv.getBoundingClientRect(); const x = (e.clientX - r.left) * ZF, y = (e.clientY - r.top) * ZF;
   if (S === 'play' && G && G.clearT < 0) hudTap(x, y); else uiTap(x, y);
 });
 document.addEventListener('touchstart', () => firstGesture(), { passive: true });
