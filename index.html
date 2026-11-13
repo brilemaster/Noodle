@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
 <meta name="theme-color" content="#2B1B3D">
 <title>Noodle and the Sunbeam Heist</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -42,7 +42,7 @@ canvas{position:fixed;left:0;top:0;display:block;touch-action:none}
 <script>
 'use strict';
 // ================= CORE: constants, physics, level data =================
-const VERSION = 13;
+const VERSION = 15;
 const T = 32;          // tile size in world units
 const LH = 16;         // level height in tiles
 const clamp = (v, a, b) => v < a ? a : (v > b ? b : v);
@@ -435,6 +435,7 @@ function addJars(L) {
   }
   return L;
 }
+const greet = (L, x, text) => L.deco.push({ k: 'greet', x: x * T, text });
 const room = (L, x0, x1) => L.rooms.push({ x0: x0 * T, x1: (x1 + 1) * T });
 // zone covers tiles x..x+w-1 and heights h..h+hh-1; lands the cat standing at (dx, surface ds)
 function warp(L, x, h, w, hh, dx, ds, kind) {
@@ -454,10 +455,11 @@ const dropoff = (L, x0, x1, s) => { L.dropoff = { x: x0 * T, y: 0, w: (x1 - x0 +
 // ---------------- World 1: Old Town Rooftops ----------------
 function b11() {
   // basics: run, jump, bop, blocks; one rooftop hill to slide down; a mattress; a balloon; a secret chimney
-  const L = mk(178, 'Morning Gutters', 0, 70); L.start = { tx: 2, s: 3 };
+  const L = mk(178, 'Main Street Mornin’', 0, 70); L.start = { tx: 2, s: 3 };
   room(L, 0, 153);
   ground(L, 0, 30, 3);
   sunspot(L, 4, 3, 3); sunspot(L, 88, 6, 3);
+  greet(L, 12, 'Mornin’, Noodle!'); greet(L, 110, 'Hot one today, Noodle!');
   coins(L, 4, 8, 4);
   tile(L, 9, 7, '?'); tile(L, 10, 7, 'C'); tile(L, 11, 7, '?');
   coins(L, 14, 19, 4);
@@ -504,10 +506,11 @@ function b11() {
 
 function b12() {
   // springs! plus a zipline ride and a secret rooftop window
-  const L = mk(188, 'Awning Bounce', 1, 85); L.start = { tx: 2, s: 3 };
+  const L = mk(188, 'Porch Hop', 1, 85); L.start = { tx: 2, s: 3 };
   room(L, 0, 163);
   ground(L, 0, 24, 3);
   sunspot(L, 3, 3, 3); sunspot(L, 30, 9, 3);
+  greet(L, 10, 'Want some sweet tea, Noodle?'); greet(L, 92, 'Y’all be careful up there!');
   coins(L, 4, 8, 4);
   tile(L, 9, 7, '?'); tile(L, 10, 7, 'U');
   pigeon(L, 16, 3);
@@ -556,10 +559,11 @@ function b12() {
 
 function b13() {
   // swinging antenna cables, a rescue balloon, a zipline and a slope to finish
-  const L = mk(190, 'Antenna Alley', 2, 95); L.start = { tx: 2, s: 3 };
+  const L = mk(190, 'Telephone Lines', 2, 95); L.start = { tx: 2, s: 3 };
   room(L, 0, 165);
   ground(L, 0, 20, 3);
   sunspot(L, 3, 3, 3); sunspot(L, 70, 3, 3);
+  greet(L, 12, 'Well, look who’s up!'); greet(L, 108, 'Bless your heart, Noodle!');
   coins(L, 3, 7, 4);
   tile(L, 8, 7, '?'); tile(L, 9, 7, 'U'); tile(L, 10, 7, '?');
   pigeon(L, 15, 3);
@@ -601,10 +605,11 @@ function b13() {
 
 function b14() {
   // flip-switch rooftops: one switch, pink or blue platforms; then Buzz flies you across
-  const L = mk(192, 'Flip-Flop Rooftops', 3, 110); L.start = { tx: 2, s: 3 };
+  const L = mk(192, 'Feed Store Flip', 3, 110); L.start = { tx: 2, s: 3 };
   room(L, 0, 165);
   ground(L, 0, 14, 3);
   sunspot(L, 1, 3, 2); sunspot(L, 50, 9, 3);
+  greet(L, 28, 'Feed store’s open, sugar!'); greet(L, 96, 'Ain’t that a sight!');
   coins(L, 3, 4, 4); coins(L, 8, 10, 4);
   tile(L, 5, 7, 'C'); tile(L, 7, 7, 'Z');
   tile(L, 11, 7, 'S'); sign(L, 13, 3, 'p', 'q', 'flip');
@@ -653,10 +658,11 @@ function b14() {
 }
 
 function b15() {
-  const L = mk(96, "Rocco's Bins", 4, 120); L.start = { tx: 2, s: 3 };
+  const L = mk(96, 'Behind the Diner', 4, 120); L.start = { tx: 2, s: 3 };
   room(L, 0, 95);
   ground(L, 0, 36, 3);
   sunspot(L, 3, 3, 3); sunspot(L, 30, 3, 3);
+  greet(L, 12, 'Careful out back, Noodle. That raccoon’s ornery.');
   coins(L, 4, 6, 4);
   tile(L, 8, 7, '?'); tile(L, 9, 7, 'C');
   tile(L, 5, 7, 'J');
@@ -696,16 +702,17 @@ function lowerBoxes(L) {
   return L;
 }
 const WORLDS = [
-  { n: 1, name: 'Old Town Rooftops', ready: true, levels: [
-    { id: '1-1', name: 'Morning Gutters', build: () => addJars(lowerBoxes(b11())) },
-    { id: '1-2', name: 'Awning Bounce', build: () => addJars(lowerBoxes(b12())) },
-    { id: '1-3', name: 'Antenna Alley', build: () => addJars(lowerBoxes(b13())) },
-    { id: '1-4', name: 'Flip-Flop Rooftops', build: () => addJars(lowerBoxes(b14())) },
-    { id: '1-5', name: "Rocco's Bins", build: () => addJars(lowerBoxes(b15())), boss: true } ] },
-  { n: 2, name: 'Neon Night Market', ready: false, levels: [] },
-  { n: 3, name: 'The Construction Site', ready: false, levels: [] },
-  { n: 4, name: 'Rainy Water Towers', ready: false, levels: [] },
-  { n: 5, name: 'The Clock Tower', ready: false, levels: [] },
+  { n: 1, name: 'Magnolia Holler', ready: true, levels: [
+    { id: '1-1', name: 'Main Street Mornin’', build: () => addJars(lowerBoxes(b11())) },
+    { id: '1-2', name: 'Porch Hop', build: () => addJars(lowerBoxes(b12())) },
+    { id: '1-3', name: 'Telephone Lines', build: () => addJars(lowerBoxes(b13())) },
+    { id: '1-4', name: 'Feed Store Flip', build: () => addJars(lowerBoxes(b14())) },
+    { id: '1-5', name: 'Behind the Diner', build: () => addJars(lowerBoxes(b15())), boss: true } ] },
+  { n: 2, name: 'Bangkok', ready: false, levels: [] },
+  { n: 3, name: 'Chiang Mai', ready: false, levels: [] },
+  { n: 4, name: 'Krabi', ready: false, levels: [] },
+  { n: 5, name: 'Phuket', ready: false, levels: [] },
+  { n: 6, name: 'Koh Samui', ready: false, levels: [] },
 ];
 
 // three hidden treasures per level (they fill the album)
@@ -713,9 +720,9 @@ const ALBUM = {
   '1-1': [{ id: 'key', name: 'Spare house key', text: 'Opens a door somewhere. Probably a shed.' },
     { id: 'button', name: 'Lost coat button', text: 'Fell off a coat in 1987. Still waiting.' },
     { id: 'marble', name: 'Swirly marble', text: 'Contains a tiny galaxy. Or soap.' }],
-  '1-2': [{ id: 'spoon', name: 'Tiny café spoon', text: 'For stirring very small coffees.' },
+  '1-2': [{ id: 'spoon', name: 'Sweet tea spoon', text: 'Stirred a thousand pitchers. Sticky.' },
     { id: 'shades', name: 'Pigeon sunglasses', text: 'Too cool for the gutter.' },
-    { id: 'cup', name: 'Espresso cup', text: 'Smells faintly of ambition.' }],
+    { id: 'cup', name: 'Diner coffee cup', text: 'Bottomless refills. Dot insists.' }],
   '1-3': [{ id: 'kite', name: 'Kite with no string', text: 'Finally free. Not thrilled about it.' },
     { id: 'plane', name: 'Paper plane', text: 'Flew 3 blocks. A personal best.' },
     { id: 'whistle', name: 'Tin whistle', text: 'Every dog in Old Town hates it.' }],
@@ -1043,11 +1050,11 @@ const PAINTCOL = { R: COL.red, B: COL.blue, Y: COL.yellow, m: COL.purple, n: COL
 
 // One time of day per level: grown-up cartoon palettes with warm light and deep cool shadows
 const THEMES = [
-  { name: 'morning', sky: ['#8EC3E8', '#C9DFEA', '#FCD9B8', '#F5B394'], far: '#A2B2CE', haze: '#FCE0C4', mid: '#57598A', win: '#FFD98A', sun: '#FFF6DA', brick: '#E8704A', brickD: '#B9493A', cap: '#3E2D57', capL: '#5A4478', chim: '#D98A6E' },
-  { name: 'noon', sky: ['#2F9FF0', '#62C0F5', '#A6DCF5', '#E4F4EE'], far: '#97BFE0', haze: '#DDF0F5', mid: '#2C5A88', win: '#FFE28A', sun: '#FFFBE6', brick: '#EF7A4D', brickD: '#C2513A', cap: '#24406B', capL: '#35598F', chim: '#E39A7C' },
-  { name: 'afternoon', sky: ['#22B7AA', '#7AD6C5', '#F7DEA8', '#F2AF82'], far: '#86C2B9', haze: '#FBE3BC', mid: '#1D5660', win: '#FFD27A', sun: '#FFF3D0', brick: '#E36A47', brickD: '#B44436', cap: '#1F3E4F', capL: '#2E5A6E', chim: '#DD8A70' },
-  { name: 'golden', sky: ['#FF8A4C', '#FFB25C', '#F7738A', '#C2477E'], far: '#B85C86', haze: '#FFB37A', mid: '#4B2F63', win: '#FFC86B', sun: '#FFF0C4', brick: '#E4613F', brickD: '#B8423A', cap: '#3A2350', capL: '#5A3A78', chim: '#D27C64' },
-  { name: 'dusk', night: true, sky: ['#1E2457', '#3B3F8F', '#8C4E9E', '#E26C8F'], far: '#4A3F8C', haze: '#E26C8F', mid: '#1B1A3A', win: '#FFD27A', sun: '#F3F0FF', brick: '#A04B62', brickD: '#5E2C50', cap: '#2A1C40', capL: '#4A2F6A', chim: '#B0637A' },
+  { name: 'morning', town: true, hill: '#9DBF9A', sky: ['#8EC3E8', '#C9DFEA', '#FCD9B8', '#F5B394'], far: '#A2B2CE', haze: '#FCE0C4', mid: '#57598A', win: '#FFD98A', sun: '#FFF6DA', brick: '#E8704A', brickD: '#B9493A', cap: '#3E2D57', capL: '#5A4478', chim: '#D98A6E' },
+  { name: 'noon', town: true, hill: '#7FBF86', sky: ['#2F9FF0', '#62C0F5', '#A6DCF5', '#E4F4EE'], far: '#97BFE0', haze: '#DDF0F5', mid: '#2C5A88', win: '#FFE28A', sun: '#FFFBE6', brick: '#EF7A4D', brickD: '#C2513A', cap: '#24406B', capL: '#35598F', chim: '#E39A7C' },
+  { name: 'afternoon', town: true, hill: '#86B98A', sky: ['#22B7AA', '#7AD6C5', '#F7DEA8', '#F2AF82'], far: '#86C2B9', haze: '#FBE3BC', mid: '#1D5660', win: '#FFD27A', sun: '#FFF3D0', brick: '#E36A47', brickD: '#B44436', cap: '#1F3E4F', capL: '#2E5A6E', chim: '#DD8A70' },
+  { name: 'golden', town: true, hill: '#B98A6E', sky: ['#FF8A4C', '#FFB25C', '#F7738A', '#C2477E'], far: '#B85C86', haze: '#FFB37A', mid: '#4B2F63', win: '#FFC86B', sun: '#FFF0C4', brick: '#E4613F', brickD: '#B8423A', cap: '#3A2350', capL: '#5A3A78', chim: '#D27C64' },
+  { name: 'dusk', town: true, hill: '#3E3A72', night: true, sky: ['#1E2457', '#3B3F8F', '#8C4E9E', '#E26C8F'], far: '#4A3F8C', haze: '#E26C8F', mid: '#1B1A3A', win: '#FFD27A', sun: '#F3F0FF', brick: '#A04B62', brickD: '#5E2C50', cap: '#2A1C40', capL: '#4A2F6A', chim: '#B0637A' },
 ];
 const SECRET_THEME = { night: true, sky: ['#2A1A44', '#3B2457', '#5A3A78', '#7A4B8C'], haze: '#7A4B8C', sun: '#FFD978', far: '#5B3A78', mid: '#4A2E66', win: '#FFD978', brick: '#8C5A9E', brickD: '#6B4280', cap: '#3A2350', capL: '#5A3A78', chim: '#9C6AB0' };
 
@@ -1426,7 +1433,12 @@ function drawBrick(L, th, tx, ty, x, y, chim) {
   for (let i = 0; i < 4; i++) for (let j = 0; j < 4; j++) if ((i + j + tx) % 2 === 0) ctx.fillRect(x + 3 + i * 8, y + 4 + j * 8, 1.6, 1.6);
   if (up) {
     if (chim) { ctx.fillStyle = '#B7A9C4'; ctx.fillRect(x - 1, y, T + 2.6, 8); ctx.fillStyle = 'rgba(255,255,255,.35)'; ctx.fillRect(x, y + 1, T, 2); }
-    else {
+    else if (th.town) {
+      ctx.fillStyle = '#A3AEC0'; ctx.fillRect(x, y, T + 0.6, 10);
+      ctx.fillStyle = '#7D889C'; for (let i = 0; i < 6; i++) ctx.fillRect(x + 2 + i * 5.4, y, 1.6, 10);
+      ctx.fillStyle = 'rgba(255,255,255,.45)'; ctx.fillRect(x, y + 1, T + 0.6, 2);
+      if ((tx * 7) % 11 === 0) { ctx.fillStyle = 'rgba(176,98,58,.45)'; ctx.fillRect(x + 8, y + 4, 9, 5); }
+    } else {
       ctx.fillStyle = th.cap; ctx.fillRect(x, y, T + 0.6, 10);
       ctx.fillStyle = th.capL; for (let i = 0; i < 4; i++) { ctx.beginPath(); ctx.arc(x + 4 + i * 8, y + 9, 3.6, 0, Math.PI); ctx.fill(); }
       ctx.fillStyle = 'rgba(255,220,190,.35)'; ctx.fillRect(x, y + 1, T + 0.6, 2);
@@ -1490,6 +1502,7 @@ function drawCactus(x, y) {
 let BGC = { key: '', far: null, mid: null };
 function seeded(seed) { let s = seed; return () => { s = (s * 16807) % 2147483647; return s / 2147483647; }; }
 function makeLayer(th, far, h) {
+  if (th.town) return makeTownLayer(th, far, h);
   const w = 1100; const c = document.createElement('canvas'); c.width = Math.ceil(w * DPR); c.height = Math.ceil(h * DPR);
   const g = c.getContext('2d'); g.scale(DPR, DPR);
   const R = seeded(far ? 7 : 13);
@@ -1556,7 +1569,7 @@ function drawBackground(th, camX, camY, maxCamY, t, secret) {
     ctx.save(); ctx.globalAlpha = alpha; for (let x = off; x < VW; x += w) ctx.drawImage(cv2, x, y, w, hh); ctx.restore();
   };
   lay(BGC.far, 0.15, VH * 0.85, 0, secret ? 0.6 : 0.75);
-  if (!secret && !th.night) drawBlimp(camX, t);
+  if (!secret && !th.night) { if (th.town) drawBiplane(camX, t); else drawBlimp(camX, t); }
   // atmospheric haze between the far and near skylines
   const hz = ctx.createLinearGradient(0, VH * 0.4, 0, VH * 0.85); hz.addColorStop(0, 'rgba(0,0,0,0)'); hz.addColorStop(1, th.haze || '#FFFFFF');
   ctx.save(); ctx.globalAlpha = 0.35; ctx.fillStyle = hz; ctx.fillRect(0, VH * 0.4, VW, VH * 0.6); ctx.restore();
@@ -1741,6 +1754,86 @@ function drawForeground(camX, t) {
   }
   ctx.restore();
 }
+
+// Magnolia Holler: rolling hills far away; Main Street storefronts, porches, oaks, courthouse and water tower up close
+function makeTownLayer(th, far, h) {
+  const w = 1100; const c = document.createElement('canvas'); c.width = Math.ceil(w * DPR); c.height = Math.ceil(h * DPR);
+  const g = c.getContext('2d'); g.scale(DPR, DPR); c.wins = []; c.lines = [];
+  const R = seeded(far ? 31 : 47);
+  if (far) {
+    const ridge = x => h * 0.55 + Math.sin(x / w * Math.PI * 2) * h * 0.05 + Math.sin(x / w * Math.PI * 6 + 1) * h * 0.025;
+    g.fillStyle = th.hill || th.far; g.beginPath(); g.moveTo(0, h);
+    for (let x = 0; x <= w; x += 10) g.lineTo(x, ridge(x)); g.lineTo(w, h); g.closePath(); g.fill();
+    g.fillStyle = 'rgba(20,40,30,.18)';
+    for (let x = 0; x < w; x += 22 + R() * 18) { g.beginPath(); g.arc(x, ridge(x) + 4, 10 + R() * 12, 0, Math.PI * 2); g.fill(); }
+    // distant silo and steeple
+    g.fillStyle = th.far; const sx = w * 0.3, sy = ridge(sx);
+    g.fillRect(sx, sy - 60, 22, 60); g.beginPath(); g.arc(sx + 11, sy - 60, 11, Math.PI, 0); g.fill();
+    const cx = w * 0.72, cy = ridge(cx); g.fillRect(cx, cy - 36, 30, 36); g.fillRect(cx + 10, cy - 66, 10, 30);
+    g.beginPath(); g.moveTo(cx + 7, cy - 66); g.lineTo(cx + 15, cy - 92); g.lineTo(cx + 23, cy - 66); g.fill();
+    return c;
+  }
+  let x = 0, k = 0;
+  const shade = (i) => i % 2 ? th.mid : 'rgba(0,0,0,0)';
+  while (x < w) {
+    const t = k % 6;
+    g.fillStyle = th.mid;
+    if (t === 2) { // oak tree
+      const tw = 50 + R() * 20, top = h - 70 - R() * 30;
+      g.fillRect(x + tw / 2 - 4, top + 30, 8, h - top); for (let i = 0; i < 4; i++) { g.beginPath(); g.arc(x + tw / 2 + (i - 1.5) * 12, top + 18 + (i % 2) * 10, 20, 0, Math.PI * 2); g.fill(); }
+      x += tw; k++; continue;
+    }
+    if (k === 7) { // courthouse with clock tower
+      const bw = 150, bh = h * 0.24, top = h - bh;
+      g.fillRect(x, top, bw, bh); g.fillRect(x + bw / 2 - 18, top - 60, 36, 60);
+      g.beginPath(); g.moveTo(x + bw / 2 - 24, top - 60); g.lineTo(x + bw / 2, top - 84); g.lineTo(x + bw / 2 + 24, top - 60); g.fill();
+      g.fillStyle = th.win; g.beginPath(); g.arc(x + bw / 2, top - 38, 10, 0, Math.PI * 2); g.fill();
+      g.strokeStyle = th.mid; g.lineWidth = 2; g.beginPath(); g.moveTo(x + bw / 2, top - 38); g.lineTo(x + bw / 2, top - 45); g.moveTo(x + bw / 2, top - 38); g.lineTo(x + bw / 2 + 5, top - 38); g.stroke();
+      g.fillStyle = 'rgba(255,255,255,.08)'; for (let i = 0; i < 5; i++) g.fillRect(x + 14 + i * 28, top + 10, 6, bh - 10);
+      x += bw + 10; k++; continue;
+    }
+    if (k === 4) { // water tower
+      const tx = x + 10, base = h - h * 0.08;
+      g.fillRect(tx + 6, base - 120, 5, 120); g.fillRect(tx + 69, base - 120, 5, 120); g.fillRect(tx + 37, base - 120, 5, 120);
+      g.beginPath(); g.ellipse(tx + 40, base - 150, 46, 32, 0, 0, Math.PI * 2); g.fill();
+      g.beginPath(); g.moveTo(tx - 4, base - 168); g.lineTo(tx + 40, base - 196); g.lineTo(tx + 84, base - 168); g.fill();
+      g.fillStyle = th.win; g.font = '700 12px ' + FB; g.textAlign = 'center'; g.textBaseline = 'middle';
+      g.fillText('MAGNOLIA', tx + 40, base - 156); g.fillText('HOLLER', tx + 40, base - 142);
+      x += 100; k++; continue;
+    }
+    if (t === 1 || t === 4) { // gabled house with a porch
+      const bw = 80 + R() * 30, bh = h * (0.12 + R() * 0.06), top = h - bh;
+      g.fillRect(x, top, bw, bh); g.beginPath(); g.moveTo(x - 6, top); g.lineTo(x + bw / 2, top - 34); g.lineTo(x + bw + 6, top); g.fill();
+      g.fillStyle = 'rgba(255,255,255,.1)'; g.fillRect(x - 8, h - 46, bw + 16, 5); for (let i = 0; i < 4; i++) g.fillRect(x - 6 + i * (bw + 12) / 3, h - 41, 3, 41);
+      g.fillStyle = th.win; for (const wx of [x + 14, x + bw - 26]) { if (R() < 0.7) { g.fillRect(wx, top + 12, 12, 14); c.wins.push({ x: wx, y: top + 12, w: 12, h: 14 }); } }
+      if (R() < 0.5) c.lines.push({ x: x + bw * 0.5, y: top + 4, w: 70 });
+      x += bw + 14; k++; continue;
+    }
+    // Main Street storefront with a false front and an awning
+    const bw = 90 + R() * 40, bh = h * (0.18 + R() * 0.1), top = h - bh;
+    g.fillRect(x, top, bw, bh); g.fillRect(x + 10, top - 14, bw - 20, 14); g.fillRect(x + bw / 2 - 16, top - 22, 32, 8);
+    g.fillStyle = 'rgba(255,255,255,.1)'; g.fillRect(x, top, bw, 3);
+    g.fillStyle = ['#C8574A', '#3F7FA6', '#4E9C6E', '#C7923E'][k % 4]; g.globalAlpha = 0.55;
+    for (let i = 0; i < 6; i++) if (i % 2 === 0) g.fillRect(x + 6 + i * (bw - 12) / 6, h - 64, (bw - 12) / 6, 12);
+    g.globalAlpha = 1; g.fillStyle = th.win;
+    for (let wx = x + 12; wx < x + bw - 20; wx += 26) { if (R() < 0.65) { g.fillRect(wx, top + 14, 14, 16); c.wins.push({ x: wx, y: top + 14, w: 14, h: 16 }); } }
+    g.fillRect(x + 10, h - 48, bw - 20, 30);
+    x += bw + 6 + R() * 10; k++;
+  }
+  return c;
+}
+
+function drawBiplane(camX, t) {
+  const span = VW + 600, x = ((t * 0.5 - camX * SCALE * 0.04) % span + span) % span - 300, y = VH * 0.17 + Math.sin(t * 0.02) * 8;
+  ctx.save();
+  ctx.strokeStyle = 'rgba(27,20,40,.6)'; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.moveTo(x - 30, y); ctx.lineTo(x - 50, y + 2); ctx.stroke();
+  rr(x - 150, y - 12, 100, 26, 4); ctx.fillStyle = 'rgba(255,246,234,.92)'; ctx.fill();
+  ctx.fillStyle = '#C8574A'; ctx.font = '800 15px ' + FB; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText('HOWDY!', x - 100, y + 1);
+  rr(x - 30, y - 6, 46, 12, 6); ctx.fillStyle = '#C8574A'; ctx.fill(); ink(1.6); ctx.stroke();
+  rr(x - 18, y - 16, 10, 32, 3); ctx.fillStyle = '#FFE680'; ctx.fill(); ink(1.4); ctx.stroke();
+  el(x + 18, y, 2, 10 * Math.abs(Math.sin(t * 0.8)) + 1); ctx.fillStyle = 'rgba(27,20,40,.5)'; ctx.fill();
+  ctx.restore();
+}
 // ================= GAME =================
 const cv = document.getElementById('game');
 let ctx = cv.getContext('2d');
@@ -1750,20 +1843,11 @@ let showTouch = ('ontouchstart' in window) || (navigator.maxTouchPoints || 0) > 
 
 function resize() {
   const vv = window.visualViewport;
-  const standalone = (window.navigator && window.navigator.standalone) || (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches);
-  if (standalone && cv.getBoundingClientRect) {
-    // Home Screen app: let CSS stretch the canvas over the whole screen (100vh covers the strip iOS
-    // leaves below the reported window height), then measure what we actually got.
-    cv.style.width = '100vw'; cv.style.height = '100vh';
-    const r = cv.getBoundingClientRect();
-    VW = Math.max(200, Math.round(r.width)); VH = Math.max(150, Math.round(r.height));
-  } else {
-    VW = Math.max(200, Math.round(vv ? vv.width : window.innerWidth));
-    VH = Math.max(150, Math.round(vv ? vv.height : window.innerHeight));
-  }
+  VW = Math.max(200, Math.round(Math.min(vv ? vv.width : 1e9, window.innerWidth)));
+  VH = Math.max(150, Math.round(Math.min(vv ? vv.height : 1e9, window.innerHeight)));
   DPR = Math.min(window.devicePixelRatio || 1, 2);
   cv.width = Math.round(VW * DPR); cv.height = Math.round(VH * DPR);
-  if (!standalone) { cv.style.width = VW + 'px'; cv.style.height = VH + 'px'; }
+  cv.style.width = VW + 'px'; cv.style.height = VH + 'px';
   // zoom from the real visible height: phones see ~9 tiles, big screens up to 15
   const phone = VH < 520;
   SCALE = phone ? VH / (11 * T) : Math.max(VH / (15.5 * T), Math.min(VH / (LH * T), VW / (30 * T)));
@@ -1948,28 +2032,34 @@ function button(x, y, w, h, label, fn, o) {
 // ---------------- story ----------------
 const SCENES = {
   intro: [
-    { w: 'cap', s: 'Every morning at 7:42, a sunbeam lands on Noodle’s windowsill. Perfect nap.' },
+    { w: 'cap', s: 'Magnolia Holler. Every morning at 7:42, a sunbeam lands on Noodle’s porch rail. Perfect nap.' },
     { w: 'cap', s: 'Today, it didn’t.' },
     { w: 'noodle', s: 'No sunbeam, no nap. Someone’s going to pay.' },
+    { w: 'pearl', s: 'Mornin’, Noodle! A fella in a fancy hat came by with a whole truck of jars.' },
+    { w: 'noodle', s: 'Jars. Of my sunshine. Fine. Quick chase, then nap.' },
   ],
   buzz: [
-    { w: 'buzz', s: 'Hop on. Hold jump to climb. Don’t shed.' },
+    { w: 'buzz', s: 'Crop-duster rules: hold jump to climb. Don’t shed.' },
     { w: 'noodle', s: 'Fly fast. My nap’s on hold.' },
   ],
   rocco1: [
-    { w: 'rocco', s: 'HALT! These bins are MINE, Loaf!' },
+    { w: 'rocco', s: 'HALT! These bins behind Dot’s Diner are MINE, Loaf!' },
     { w: 'noodle', s: 'Keep your bins. I want my sunbeam.' },
   ],
   rocco2: [
-    { w: 'rocco', s: 'Truce! The sunshine thief? Big pigeon, fancy hat. That way.' },
-    { w: 'noodle', s: 'Every minute without sun is a minute without a nap.' },
+    { w: 'rocco', s: 'Truce! Fancy-hat pigeon loaded every jar onto a delivery truck. Airport-bound!' },
+    { w: 'noodle', s: '…How far could one truck go?' },
   ],
   w2tease: [
-    { w: 'coo', s: 'Another jar of sunshine, boys. Who let the sleepy cat follow us?' },
-    { w: 'cap', s: 'World 2 is coming soon.' },
+    { w: 'cap', s: 'Noodle follows the jar truck all the way to the airport… and finds the warmest crate of all.' },
+    { w: 'noodle', s: 'Just a quick nap.' },
+    { w: 'cap', s: 'Eighteen hours later…' },
+    { w: 'cap', s: 'BANGKOK.' },
+    { w: 'noodle', s: '…This is not my porch.' },
+    { w: 'cap', s: 'Bangkok is coming soon!' },
   ],
 };
-const SPEAKER = { noodle: 'Noodle', rocco: 'Rocco', buzz: 'Buzz', coo: 'Don Coo' };
+const SPEAKER = { noodle: 'Noodle', rocco: 'Rocco', buzz: 'Buzz', coo: 'Don Coo', pearl: 'Miss Pearl' };
 let DLG = null;
 function startScene(id, done) {
   const p = prof();
@@ -2343,6 +2433,7 @@ function updatePlay() {
   }
   if (g.inv > 0) g.inv--;
   if (inp.left || inp.right || inp.jump || !p.onGround) g.idle = 0; else g.idle++;
+  for (const d of L.deco) if (d.k === 'greet' && !d.done && Math.abs(p.x - d.x) < 40) { d.done = true; popWord(p.x + p.w / 2, p.y - 46, d.text, '#FFF3E0', 14); g.pops[g.pops.length - 1].life = 110; }
   if (g.idle === 91 && inSun(g)) { SFX.pouch(); popWord(p.x + p.w / 2, p.y - 20, 'Ahh… sun.', COL.sun, 14); }
   if (g.rain) {
     g.rain.t--; if (g.rain.t <= 0) g.rain = null;
@@ -2692,7 +2783,15 @@ function closeName(to) {
 }
 
 // ================= RENDER =================
+let pageBg = '';
+function syncPageBg() {
+  let c = '#7E5670';
+  if ((S === 'play' || S === 'pause' || S === 'clear') && G) { const r = roomFor(G.p.x + G.p.w / 2); c = r.secret ? SECRET_THEME.brickD : THEMES[G.L.theme].brickD; }
+  else if (S === 'map' || S === 'album') c = '#3A2350';
+  if (c !== pageBg) { pageBg = c; document.documentElement.style.background = c; document.body.style.background = c; }
+}
 function render() {
+  if (document.documentElement && document.documentElement.style) syncPageBg();
   ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
   BTN = []; HUDBTN = [];
   if (['title', 'name', 'profiles', 'album', 'map', 'settings'].includes(S) || (S === 'dialog' && DLG && DLG.back !== 'play')) playSong('title');
@@ -2807,6 +2906,7 @@ function drawPart(q) {
   ctx.restore();
 }
 function drawDeco(d, t) {
+  if (d.k === 'greet') return;   // invisible trigger for neighbors saying howdy
   if (d.k === 'sun') {
     ctx.save(); ctx.globalAlpha = 0.28 + Math.sin(t * 0.04 + d.x) * 0.05;
     const gr = ctx.createLinearGradient(0, d.y - 360, 0, d.y); gr.addColorStop(0, 'rgba(255,236,160,0)'); gr.addColorStop(1, '#FFE680');
@@ -3064,6 +3164,7 @@ function drawPortrait(who, x, y, s, active) {
   else if (who === 'rocco') { ctx.save(); ctx.translate(x, y); ctx.scale(sc * 1.15, sc * 1.15); drawRocco(0, 0, 1, DLG && DLG.id === 'rocco2' ? 'sorry' : 'full', T0, -1); ctx.restore(); }
   else if (who === 'buzz') drawBuzz(x, y - 40 * sc, T0, sc * 1.6, null);
   else if (who === 'coo') drawCoo(x, y, sc * 1.1);
+  else if (who === 'pearl') drawPearl(x, y, sc);
   ctx.restore();
 }
 function wrapLines(s, maxW, size, font) {
@@ -3092,7 +3193,7 @@ function renderDialog() {
     const nm = SPEAKER[line.w] || '';
     ctx.font = '800 ' + Math.round(15 * U) + 'px ' + FB; const tw = ctx.measureText(nm).width + 28 * U;
     const tagX = line.w === 'noodle' ? bx + 20 : bx + bw - nextW - 30 - tw;
-    rr(tagX, by - 14 * U, tw, 28 * U, 14 * U); ctx.fillStyle = line.w === 'noodle' ? COL.orange : line.w === 'rocco' ? '#8C8A9C' : line.w === 'buzz' ? '#FFC23D' : '#4A2D5C'; ctx.fill();
+    rr(tagX, by - 14 * U, tw, 28 * U, 14 * U); ctx.fillStyle = line.w === 'noodle' ? COL.orange : line.w === 'rocco' ? '#8C8A9C' : line.w === 'buzz' ? '#FFC23D' : line.w === 'pearl' ? '#5FA38A' : '#4A2D5C'; ctx.fill();
     ctx.fillStyle = line.w === 'buzz' ? '#2E2140' : '#FFF3E0'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(nm, tagX + tw / 2, by + 1);
   }
   const shown = wrapF(line.s.slice(0, Math.floor(d.chars)));
@@ -3285,38 +3386,49 @@ function renderMap() {
   ctx.font = '700 ' + Math.round(Math.min(48 * U, VH * 0.07)) + 'px ' + FT; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
   ctx.fillStyle = 'rgba(27,20,40,.35)'; ctx.fillText(w.name, VW / 2 + 2, ty2 + 3); ctx.fillStyle = '#FFF3E0'; ctx.fillText(w.name, VW / 2, ty2);
   const sy = ty2 + Math.min(48 * U, VH * 0.07) * 0.5 + 22 * U, aw = 30 * U;
-  const wl = 'World ' + w.n + ' of ' + WORLDS.length + (w.ready && pr ? '   ·   ★ ' + w.levels.reduce((n, l) => n + starsFor(levelRec(l.id)), 0) + ' of ' + w.levels.length * 3 : '');
+  const wl = 'City ' + w.n + ' of ' + WORLDS.length + (w.ready && pr ? '   ·   ★ ' + w.levels.reduce((n, l) => n + starsFor(levelRec(l.id)), 0) + ' of ' + w.levels.length * 3 : '');
   flatText(wl, VW / 2, sy, Math.round(14 * U), '#FFF3E0', 'center', '800 ' + FB);
   ctx.font = '800 ' + Math.round(14 * U) + 'px ' + FB; const half = ctx.measureText(wl).width / 2 + 14 * U;
   if (mapW > 0) arrowBtn(VW / 2 - half - aw, sy - aw / 2, aw, -1, () => { mapW--; mapSel = WORLDS[mapW].ready ? firstOpenLevel(mapW) : 0; });
   if (mapW < WORLDS.length - 1) arrowBtn(VW / 2 + half, sy - aw / 2, aw, 1, () => { mapW++; mapSel = WORLDS[mapW].ready ? firstOpenLevel(mapW) : 0; });
   if (!w.ready) {
-    ctx.save(); ctx.translate(VW / 2, VH * 0.6); if (mapW === 1) drawCoo(0, 50 * U, 1.4 * U); ctx.restore();
+
     flatText('Coming soon', VW / 2, VH * 0.82, Math.round(26 * U), COL.sun, 'center', '800 ' + FB);
     return;
   }
-  // one rooftop path with five stops
-  const cardTop = VH - SAFE.b - 92 * U - 16, x0 = SAFE.l + 90 * U, x1 = VW - SAFE.r - 90 * U, baseY = Math.min(VH * 0.58, cardTop - 62 * U);
-  const pos = w.levels.map((_, i) => [lerp(x0, x1, i / (w.levels.length - 1)), baseY + (i % 2 ? -28 : 18) * U]);
-  ctx.lineWidth = 6 * U; ctx.lineCap = 'round'; ctx.strokeStyle = 'rgba(27,20,40,.45)';
-  ctx.beginPath(); pos.forEach(([x, y], i) => i ? ctx.lineTo(x, y) : ctx.moveTo(x, y)); ctx.stroke();
-  ctx.lineWidth = 2.5 * U; ctx.strokeStyle = 'rgba(255,243,224,.8)'; ctx.setLineDash([8, 8]); ctx.stroke(); ctx.setLineDash([]);
+  // each stop is a rooftop, with Noodle's jump arcs between them
+  const cardTop = VH - SAFE.b - 92 * U - 16, n = w.levels.length;
+  const x0 = SAFE.l + 70 * U, x1 = VW - SAFE.r - 70 * U, span = (x1 - x0) / n, bw2 = Math.min(span * 0.62, 120 * U);
+  const avail = cardTop - (sy + 40 * U);
+  const heights = [0.42, 0.62, 0.5, 0.7, 0.85];
+  const roofs = w.levels.map((_, i) => ({ x: x0 + span * (i + 0.5), y: cardTop - avail * heights[i % heights.length] }));
+  ctx.setLineDash([6, 8]); ctx.lineWidth = 3 * U;
+  for (let i = 0; i < n - 1; i++) {
+    const a1 = roofs[i], b1 = roofs[i + 1], peak = Math.min(a1.y, b1.y) - 46 * U;
+    ctx.strokeStyle = unlocked(mapW, i + 1) ? 'rgba(255,243,224,.75)' : 'rgba(255,243,224,.3)';
+    ctx.beginPath(); ctx.moveTo(a1.x + bw2 * 0.25, a1.y - 6); ctx.quadraticCurveTo((a1.x + b1.x) / 2, peak, b1.x - bw2 * 0.25, b1.y - 6); ctx.stroke();
+  }
+  ctx.setLineDash([]);
   w.levels.forEach((lv, i) => {
-    const [x, y] = pos[i], open = unlocked(mapW, i), rec = levelRec(lv.id), sel = i === mapSel, r = (lv.boss ? 30 : 26) * U;
-    if (sel) { ci(x, y, r + 8 + Math.sin(T0 * 0.1) * 2); ctx.fillStyle = 'rgba(255,230,128,.45)'; ctx.fill(); }
-    ci(x, y, r); ctx.fillStyle = !open ? 'rgba(27,20,40,.55)' : rec && rec.cleared ? '#FFF3E0' : '#FFC23D'; ctx.fill();
-    ctx.lineWidth = 2.5; ctx.strokeStyle = '#1B1428'; ctx.stroke();
-    ctx.font = '800 ' + Math.round(16 * U) + 'px ' + FB; ctx.fillStyle = open ? '#1B1428' : 'rgba(255,243,224,.7)'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-    ctx.fillText(lv.boss ? 'BOSS' : lv.id, x, y + 1);
-    const st = starsFor(rec);
-    if (open) for (let k = 0; k < 3; k++) { starPath(x - 16 * U + k * 16 * U, y + r + 13 * U, 6.5 * U, 3 * U); ctx.fillStyle = k < st ? COL.sun : 'rgba(255,243,224,.35)'; ctx.fill(); }
-    else flatText('Locked', x, y + r + 14 * U, Math.round(12 * U), 'rgba(255,243,224,.85)', 'center', '700 ' + FB);
-    BTN.push({ x: x - r - 6, y: y - r - 6, w: r * 2 + 12, h: r * 2 + 30 * U, fn: () => { if (!open) return; if (mapSel === i) startLevel(mapW, i); else mapSel = i; } });
+    const { x, y } = roofs[i], open = unlocked(mapW, i), rec = levelRec(lv.id), sel = i === mapSel;
+    const bx = x - bw2 / 2, body = open ? (sel ? '#5A3A78' : '#4B2F63') : '#2E1E40';
+    if (sel) { ctx.save(); ctx.globalAlpha = 0.35 + Math.sin(T0 * 0.05) * 0.08; const gr = ctx.createLinearGradient(0, y - 220 * U, 0, y); gr.addColorStop(0, 'rgba(255,236,160,0)'); gr.addColorStop(1, '#FFE680'); ctx.fillStyle = gr; ctx.beginPath(); ctx.moveTo(x - bw2 * 0.2, y - 220 * U); ctx.lineTo(x + bw2 * 0.9, y - 220 * U); ctx.lineTo(x + bw2 * 0.55, y); ctx.lineTo(x - bw2 * 0.55, y); ctx.closePath(); ctx.fill(); ctx.restore(); }
+    ctx.fillStyle = body; ctx.fillRect(bx, y, bw2, cardTop - y + 20);
+    ctx.fillStyle = 'rgba(0,0,0,.18)'; ctx.fillRect(bx + bw2 - 8 * U, y, 8 * U, cardTop - y + 20);
+    ctx.fillStyle = open ? '#E4613F' : '#5A3A50';
+    if (lv.boss) { ctx.fillRect(bx - 6, y - 8 * U, bw2 + 12, 10 * U); ctx.fillStyle = '#1B1428'; ctx.fillRect(x + bw2 * 0.25, y - 52 * U, 3 * U, 44 * U); ctx.fillStyle = open ? '#FF6F86' : '#6B4560'; ctx.beginPath(); ctx.moveTo(x + bw2 * 0.25 + 3 * U, y - 52 * U); ctx.lineTo(x + bw2 * 0.25 + 26 * U, y - 44 * U); ctx.lineTo(x + bw2 * 0.25 + 3 * U, y - 36 * U); ctx.fill(); }
+    else if (i % 2) { ctx.beginPath(); ctx.moveTo(bx - 6, y + 2); ctx.lineTo(x, y - 28 * U); ctx.lineTo(bx + bw2 + 6, y + 2); ctx.closePath(); ctx.fill(); }
+    else { ctx.fillRect(bx - 6, y - 8 * U, bw2 + 12, 10 * U); ctx.fillStyle = '#7A5A8C'; ctx.fillRect(bx + bw2 * 0.15, y - 26 * U, 14 * U, 18 * U); }
+    ctx.fillStyle = open ? '#FFD27A' : 'rgba(255,255,255,.08)';
+    for (let wy = y + 48 * U; wy < cardTop - 6; wy += 22 * U) for (let wx = bx + 12 * U; wx < bx + bw2 - 18 * U; wx += 20 * U) if (((wx * 7 + wy * 3) | 0) % 3) ctx.fillRect(wx, wy, 8 * U, 10 * U);
+    if (open) { for (let k = 0; k < 3; k++) { starPath(x - 16 * U + k * 16 * U, y + 26 * U, 6.5 * U, 3 * U); ctx.fillStyle = k < starsFor(rec) ? COL.sun : 'rgba(255,243,224,.3)'; ctx.fill(); } }
+    else flatText('Locked', x, y + 26 * U, Math.round(12 * U), 'rgba(255,243,224,.8)', 'center', '700 ' + FB);
+    BTN.push({ x: bx - 8, y: y - 60 * U, w: bw2 + 16, h: cardTop - y + 60 * U, fn: () => { if (!open) return; if (mapSel === i) startLevel(mapW, i); else mapSel = i; } });
   });
-  const [hx, hy] = pos[mapSel];
+  const hx = roofs[mapSel].x, hy = roofs[mapSel].y - (w.levels[mapSel].boss || mapSel % 2 === 0 ? 8 * U : 22 * U);
   const dozing = T0 - (window.lastInputT || 0) > 300;
-  drawNoodle(hx, hy - 26 * U + (dozing ? 6 * U : Math.abs(Math.sin(T0 * 0.12)) * -4), { face: 1, t: T0, anim: dozing ? 'nap' : 'idle', s: 0.85 * U });
-  if (dozing) for (let i = 0; i < 3; i++) { const kz = ((T0 * 0.4 + i * 33) % 100) / 100; ctx.save(); ctx.globalAlpha = 1 - kz; flatText('z', hx + 16 * U + kz * 14 * U, hy - 40 * U - kz * 24 * U, Math.round((10 + i * 3) * U), '#FFF3E0', 'center', '800 ' + FB); ctx.restore(); }
+  drawNoodle(hx, hy + (dozing ? 2 * U : Math.abs(Math.sin(T0 * 0.12)) * -4), { face: 1, t: T0, anim: dozing ? 'nap' : 'idle', s: 0.85 * U });
+  if (dozing) for (let i = 0; i < 3; i++) { const kz = ((T0 * 0.4 + i * 33) % 100) / 100; ctx.save(); ctx.globalAlpha = 1 - kz; flatText('z', hx + 16 * U + kz * 14 * U, hy - 20 * U - kz * 24 * U, Math.round((10 + i * 3) * U), '#FFF3E0', 'center', '800 ' + FB); ctx.restore(); }
   // the card for the chosen level
   const lv = w.levels[mapSel], rec = levelRec(lv.id);
   const cw = Math.min(600 * U, VW - SAFE.l - SAFE.r - 40), ch = 92 * U, cx0 = VW / 2 - cw / 2, cy0 = VH - SAFE.b - ch - 16;
@@ -3341,7 +3453,7 @@ function renderPause() {
   ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
   ctx.fillStyle = 'rgba(43,27,61,.6)'; ctx.fillRect(0, 0, VW, VH);
   txt('Paused', VW / 2, VH * 0.2, Math.round(34 * U), COL.white);
-  txt(G.def.id + '  ' + G.def.name, VW / 2, VH * 0.2 + 30 * U, Math.round(15 * U), COL.sun, 'center', FB, 3);
+  txt(G.def.name, VW / 2, VH * 0.2 + 30 * U, Math.round(15 * U), COL.sun, 'center', FB, 3);
   const bw = 220 * U, bh = 46 * U, x = VW / 2 - bw / 2;
   button(x, VH * 0.36, bw, bh, 'Resume', resumeGame, { size: Math.round(20 * U), accent: true });
   button(x, VH * 0.36 + bh + 12 * U, bw, bh, 'Restart level', () => startLevel(G.wi, G.li), { size: Math.round(18 * U), c1: '#FFFFFF', c2: '#D8CFE8', tc: COL.ink });
@@ -3466,6 +3578,20 @@ function drawPartyRoom(room, L, t) {
 }
 
 function inSun(g) { const cx = g.p.x + g.p.w / 2, fy = g.p.y + g.p.h; return g.L.deco.some(d => d.k === 'sun' && cx > d.x && cx < d.x + d.w && Math.abs(fy - d.y) < 6); }
+
+// Miss Pearl, Noodle's neighbor on the porch: silver bun, glasses, cardigan
+function drawPearl(x, y, s) {
+  ctx.save(); ctx.translate(x, y); ctx.scale(s, s);
+  rr(-22, -46, 44, 46, 14); fs('#6FB59B', 2.6);                 // cardigan
+  rr(-6, -46, 12, 20, 4); fs('#FFF3E0', 1.6);                  // collar
+  ci(0, -62, 17); ctx.fillStyle = vgrad(-80, -44, '#F6D2B8', '#E8B796'); ctx.fill(); ink(2.6); ctx.stroke();
+  ci(0, -80, 10); fs('#D9D6E6', 2.4); el(0, -74, 18, 7); fs('#D9D6E6', 2.2);   // silver bun + hair
+  ci(-7, -62, 5); ci(7, -62, 5); ink(1.8); ctx.stroke(); ctx.beginPath(); ctx.moveTo(-2, -62); ctx.lineTo(2, -62); ctx.stroke();  // glasses
+  ci(-7, -62, 1.4); ci(7, -62, 1.4); ctx.fillStyle = COL.ink; ctx.fill();
+  ctx.beginPath(); ctx.arc(0, -55, 5, 0.2, Math.PI - 0.2); ink(1.8); ctx.stroke();  // smile
+  ci(-11, -55, 3); ci(11, -55, 3); ctx.fillStyle = 'rgba(255,111,134,.35)'; ctx.fill();
+  ctx.restore();
+}
 </script>
 </body>
 </html>

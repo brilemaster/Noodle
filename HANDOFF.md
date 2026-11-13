@@ -1,10 +1,12 @@
 # Noodle and the Sunbeam Heist — handoff guide
 
-Current version: **v13** (shown bottom-right of the title screen). Check a deploy with `?v=13`.
+Current version: **v15** (shown bottom-right of the title screen). Check a deploy with `?v=15`.
 
 ## Changelog
 - v1: World 1 built.
 - v2: game-feel update (owner asked: keep art, make it feel like a snappy Mario game). New movement physics, animation, juice, power-ups, treasures, flagpole, HUD clarity.
+- v15: City 1 is now **Magnolia Holler**, Noodle's small Southern hometown (Mayberry feel, KY/TN/AL mix): rolling hills, Main Street storefronts with awnings, gabled porch houses, oaks, courthouse clock tower, MAGNOLIA HOLLER water tower, tin roofs, a HOWDY! biplane banner, neighbors calling out greetings (`greet()` deco), Miss Pearl (neighbor) in the intro. Levels renamed: Main Street Mornin', Porch Hop, Telephone Lines, Feed Store Flip, Behind the Diner (Rocco). Ending: Noodle naps on a warm jar crate, wakes up in Bangkok. Map lists six cities.
+- v14: Home Screen bottom strip: root cause is iPadOS standalone + `black-translucent` status bar leaving a strip below the web view. Switched `apple-mobile-web-app-status-bar-style` to `black` (owner must delete and re-add the Home Screen icon for iOS to pick it up), sizing back to the visible area (min of visualViewport/innerHeight), and the page background now follows the bottom colour of the current scene (`syncPageBg`). World map redrawn as rooftops (one building per level, jump arcs, sunbeam on the chosen roof, boss building with a flag); level numbers like "1-1" removed from the UI; "World" wording changed to "City". **Owner direction:** worlds become cities. Start in American cities, travel abroad, return to America; ~5 levels per city. Owner has specific cities in mind (ask for the list).
 - v13: story rewritten so it's clear Noodle can only nap properly in a sunbeam (new lines in `SCENES`). Sun patches (`sunspot()`) on rooftops: stand still in one for ~1.5s and Noodle naps ("Ahh… sun."); in shade Noodle only yawns. Empty sunshine jars (`addJars()`) dot each level along the thief's trail. On the map, Noodle dozes if you leave it alone ~5s. Dialog text now wraps with the same font it draws (no overflow under Next).
 - v12: fixed the dark strip at the bottom in Home Screen (standalone) mode, which v9's screen-size guess had made worse (it also cut off bottom buttons). Now: in standalone the canvas is sized with CSS `100vw`/`100vh` and the real size is measured with `getBoundingClientRect()`; browser tabs still use `visualViewport` so toolbars never hide controls.
 - v11: punchier jump: same height (~4.2 tiles) but faster (`JV` -14.2, `G` 0.71, airtime ~39 frames); springs, bops, balloons, clotheslines, vine/zip releases scaled to keep the same heights. Boxes that sat 3 empty tiles above a floor are lowered by one (`lowerBoxes()` runs on every level), so a small hop bonks them (~6 bonks a second when holding jump). Checker's normal-player mode now scales the real jump instead of a hard-coded value.
@@ -24,6 +26,18 @@ A Mario-style browser platformer for friends and family (teens and adults). One 
 - `index.html` — the whole game.
 - `HANDOFF.md` — this guide.
 - `music.mp3` (optional, owner adds) — looped with a plain `<audio>` element, starts on first tap, stops when the tab is hidden or closed.
+
+## Content rules (updated by owner)
+- The original "no holidays, no magic, no luck themes" rules are **lifted**. Holidays/festivals (e.g. Songkran, Yi Peng/Loy Krathong), magical touches and lucky items are all fine. Owner: "No boundaries here, let's get fun." Still keep it family-friendly. Temples stay as background scenery (cultural courtesy).
+
+## The journey (approved plan)
+1. **Magnolia Holler** (home, built in v15) → nap on a jar crate → cargo plane.
+2. **Bangkok during Songkran**: water-fight crowds that push you back, buckets, water balloons, tuk-tuk ride, Lumpini Park monitor lizards as obstacles you bounce off; boss Big Lou the monitor lizard.
+3. **Chiang Mai**: misty jungle, bamboo bridges, waterfalls, Yi Peng lantern night level (floating lantern platforms), elephant buddy; boss a jar-hoarding macaque.
+4. **Krabi**: limestone cliffs, beach caves, longtail boats, wall-jumps, fish-stealing monkeys; boss a grumpy upside-down fruit bat.
+5. **Phuket**: Old Town shophouses, beaches, rising/falling tide; boss a hermit crab wanting a sunbeam-jar shell.
+6. **Koh Samui**: coconut groves, bungalows, full-moon beach party, coconut cannons, wave surfing; boss a giant coconut crab who reveals the next country.
+7. More countries (to brainstorm with owner), then home to Magnolia Holler for the finale (Don Coo's sunbeam garden). ~5 levels per city, levels ~2–3 minutes, build one city per update.
 
 ## Story so far (approved)
 - Core idea (owner emphasised in v13): Noodle can only nap properly in a sunbeam. Every morning at 7:42 a sunbeam lands on Noodle's windowsill; one day it doesn't. "No sunbeam, no nap." Ending: Don Coo was bottling sunbeams to grow a rooftop garden; he shares, and Noodle naps in the best sunbeam in town.
