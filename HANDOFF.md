@@ -1,10 +1,11 @@
 # Noodle and the Sunbeam Heist — handoff guide
 
-Current version: **v12** (shown bottom-right of the title screen). Check a deploy with `?v=12`.
+Current version: **v13** (shown bottom-right of the title screen). Check a deploy with `?v=13`.
 
 ## Changelog
 - v1: World 1 built.
 - v2: game-feel update (owner asked: keep art, make it feel like a snappy Mario game). New movement physics, animation, juice, power-ups, treasures, flagpole, HUD clarity.
+- v13: story rewritten so it's clear Noodle can only nap properly in a sunbeam (new lines in `SCENES`). Sun patches (`sunspot()`) on rooftops: stand still in one for ~1.5s and Noodle naps ("Ahh… sun."); in shade Noodle only yawns. Empty sunshine jars (`addJars()`) dot each level along the thief's trail. On the map, Noodle dozes if you leave it alone ~5s. Dialog text now wraps with the same font it draws (no overflow under Next).
 - v12: fixed the dark strip at the bottom in Home Screen (standalone) mode, which v9's screen-size guess had made worse (it also cut off bottom buttons). Now: in standalone the canvas is sized with CSS `100vw`/`100vh` and the real size is measured with `getBoundingClientRect()`; browser tabs still use `visualViewport` so toolbars never hide controls.
 - v11: punchier jump: same height (~4.2 tiles) but faster (`JV` -14.2, `G` 0.71, airtime ~39 frames); springs, bops, balloons, clotheslines, vine/zip releases scaled to keep the same heights. Boxes that sat 3 empty tiles above a floor are lowered by one (`lowerBoxes()` runs on every level), so a small hop bonks them (~6 bonks a second when holding jump). Checker's normal-player mode now scales the real jump instead of a hard-coded value.
 - v10: far fewer pop-ups (no jump/boing/grab/zip words, no +1 per fish, no score numbers on bops; remaining words smaller and shorter; banners and hints moved up under the HUD; finds pulse their HUD icon instead of a message). Secret rooms 6 tiles wider with the exit door at the far right end. Jumping: hold jump to hop again the instant you land (`p.hopHeld`), 10-frame buffer, faster drop after bonking a block; fish boxes (`M`) give 2 fish per bonk and empty in 5 bonks.
@@ -25,6 +26,7 @@ A Mario-style browser platformer for friends and family (teens and adults). One 
 - `music.mp3` (optional, owner adds) — looped with a plain `<audio>` element, starts on first tap, stops when the tab is hidden or closed.
 
 ## Story so far (approved)
+- Core idea (owner emphasised in v13): Noodle can only nap properly in a sunbeam. Every morning at 7:42 a sunbeam lands on Noodle's windowsill; one day it doesn't. "No sunbeam, no nap." Ending: Don Coo was bottling sunbeams to grow a rooftop garden; he shares, and Noodle naps in the best sunbeam in town.
 - Hero: **Noodle**, a sleepy orange tabby. No pronouns anywhere; other characters call Noodle wrong nicknames ("Loaf", "small orange couch", "Mr. Whiskers?", "the orange one").
 - Every sunbeam in Old Town has been bottled; a trail of empty jars leads over the rooftops.
 - Final villain: **Don Coo**, a pigeon "mob boss" in a hat, secretly using the sunbeams to grow a rooftop garden for the neighborhood. Ending: Noodle shares a sunbeam and gets the best nap spot.

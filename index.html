@@ -42,7 +42,7 @@ canvas{position:fixed;left:0;top:0;display:block;touch-action:none}
 <script>
 'use strict';
 // ================= CORE: constants, physics, level data =================
-const VERSION = 12;
+const VERSION = 13;
 const T = 32;          // tile size in world units
 const LH = 16;         // level height in tiles
 const clamp = (v, a, b) => v < a ? a : (v > b ? b : v);
@@ -421,6 +421,20 @@ const vine = (L, x, h, len) => L.vines.push({ ax: x * T + 16, ay: (L.h - h + 1) 
   amp: 0.38, spd: 0.035, ph: L.vines.length * 1.7 });
 // a little sign showing a paint recipe: a + b = mix
 const sign = (L, x, s, a, b, mix) => L.deco.push({ k: 'sign', x: x * T + 16, y: (L.h - s) * T, a, b, mix });
+// a warm patch of sunlight on a rooftop (stand still in it and Noodle naps)
+const sunspot = (L, x, s, w) => L.deco.push({ k: 'sun', x: x * T, y: (L.h - s) * T, w: (w || 3) * T });
+// empty sunshine jars left along the thief's trail, roughly every 22 tiles on open rooftops
+function addJars(L) {
+  const main = L.rooms[0] || { x0: 0, x1: L.w * T };
+  for (let tx = 14; tx < main.x1 / T - 12; tx += 22) {
+    for (let ty = 2; ty < L.h - 1; ty++) {
+      const c = L.g[ty][tx];
+      if (c === '#' && L.g[ty - 1][tx] === '.' && L.g[ty - 2][tx] === '.') { L.deco.push({ k: 'jar', x: tx * T + 16, y: ty * T, tilt: (tx % 3) - 1 }); break; }
+      if (c !== '.') break;
+    }
+  }
+  return L;
+}
 const room = (L, x0, x1) => L.rooms.push({ x0: x0 * T, x1: (x1 + 1) * T });
 // zone covers tiles x..x+w-1 and heights h..h+hh-1; lands the cat standing at (dx, surface ds)
 function warp(L, x, h, w, hh, dx, ds, kind) {
@@ -443,6 +457,7 @@ function b11() {
   const L = mk(178, 'Morning Gutters', 0, 70); L.start = { tx: 2, s: 3 };
   room(L, 0, 153);
   ground(L, 0, 30, 3);
+  sunspot(L, 4, 3, 3); sunspot(L, 88, 6, 3);
   coins(L, 4, 8, 4);
   tile(L, 9, 7, '?'); tile(L, 10, 7, 'C'); tile(L, 11, 7, '?');
   coins(L, 14, 19, 4);
@@ -492,6 +507,7 @@ function b12() {
   const L = mk(188, 'Awning Bounce', 1, 85); L.start = { tx: 2, s: 3 };
   room(L, 0, 163);
   ground(L, 0, 24, 3);
+  sunspot(L, 3, 3, 3); sunspot(L, 30, 9, 3);
   coins(L, 4, 8, 4);
   tile(L, 9, 7, '?'); tile(L, 10, 7, 'U');
   pigeon(L, 16, 3);
@@ -543,6 +559,7 @@ function b13() {
   const L = mk(190, 'Antenna Alley', 2, 95); L.start = { tx: 2, s: 3 };
   room(L, 0, 165);
   ground(L, 0, 20, 3);
+  sunspot(L, 3, 3, 3); sunspot(L, 70, 3, 3);
   coins(L, 3, 7, 4);
   tile(L, 8, 7, '?'); tile(L, 9, 7, 'U'); tile(L, 10, 7, '?');
   pigeon(L, 15, 3);
@@ -587,6 +604,7 @@ function b14() {
   const L = mk(192, 'Flip-Flop Rooftops', 3, 110); L.start = { tx: 2, s: 3 };
   room(L, 0, 165);
   ground(L, 0, 14, 3);
+  sunspot(L, 1, 3, 2); sunspot(L, 50, 9, 3);
   coins(L, 3, 4, 4); coins(L, 8, 10, 4);
   tile(L, 5, 7, 'C'); tile(L, 7, 7, 'Z');
   tile(L, 11, 7, 'S'); sign(L, 13, 3, 'p', 'q', 'flip');
@@ -638,6 +656,7 @@ function b15() {
   const L = mk(96, "Rocco's Bins", 4, 120); L.start = { tx: 2, s: 3 };
   room(L, 0, 95);
   ground(L, 0, 36, 3);
+  sunspot(L, 3, 3, 3); sunspot(L, 30, 3, 3);
   coins(L, 4, 6, 4);
   tile(L, 8, 7, '?'); tile(L, 9, 7, 'C');
   tile(L, 5, 7, 'J');
@@ -678,11 +697,11 @@ function lowerBoxes(L) {
 }
 const WORLDS = [
   { n: 1, name: 'Old Town Rooftops', ready: true, levels: [
-    { id: '1-1', name: 'Morning Gutters', build: () => lowerBoxes(b11()) },
-    { id: '1-2', name: 'Awning Bounce', build: () => lowerBoxes(b12()) },
-    { id: '1-3', name: 'Antenna Alley', build: () => lowerBoxes(b13()) },
-    { id: '1-4', name: 'Flip-Flop Rooftops', build: () => lowerBoxes(b14()) },
-    { id: '1-5', name: "Rocco's Bins", build: () => lowerBoxes(b15()), boss: true } ] },
+    { id: '1-1', name: 'Morning Gutters', build: () => addJars(lowerBoxes(b11())) },
+    { id: '1-2', name: 'Awning Bounce', build: () => addJars(lowerBoxes(b12())) },
+    { id: '1-3', name: 'Antenna Alley', build: () => addJars(lowerBoxes(b13())) },
+    { id: '1-4', name: 'Flip-Flop Rooftops', build: () => addJars(lowerBoxes(b14())) },
+    { id: '1-5', name: "Rocco's Bins", build: () => addJars(lowerBoxes(b15())), boss: true } ] },
   { n: 2, name: 'Neon Night Market', ready: false, levels: [] },
   { n: 3, name: 'The Construction Site', ready: false, levels: [] },
   { n: 4, name: 'Rainy Water Towers', ready: false, levels: [] },
@@ -1879,6 +1898,7 @@ window.addEventListener('orientationchange', () => setTimeout(resize, 300));
 if (window.visualViewport) { window.visualViewport.addEventListener('resize', resize); window.visualViewport.addEventListener('scroll', () => window.scrollTo(0, 0)); }
 
 function onKeyPress(code) {
+  window.lastInputT = T0;
   const enter = code === 'Enter' || code === 'NumpadEnter';
   if (S === 'dialog') { if (enter || code === 'Space' || code === 'KeyZ' || code === 'KeyX') dlgAdvance(); if (code === 'Escape' && DLG && DLG.canSkip) dlgEnd(); return; }
   if (S === 'play') {
@@ -1903,6 +1923,7 @@ function onKeyPress(code) {
 // ---------------- buttons ----------------
 let BTN = [], HUDBTN = [];
 function uiTap(x, y) {
+  window.lastInputT = T0;
   for (let i = BTN.length - 1; i >= 0; i--) {
     const b = BTN[i], pad = 8;
     if (x >= b.x - pad && x <= b.x + b.w + pad && y >= b.y - pad && y <= b.y + b.h + pad) { SFX.tap(); b.fn(); return true; }
@@ -1927,24 +1948,24 @@ function button(x, y, w, h, label, fn, o) {
 // ---------------- story ----------------
 const SCENES = {
   intro: [
-    { w: 'cap', s: 'Old Town. Someone stole every sunbeam.' },
-    { w: 'noodle', s: 'My nap spot. Ruined.' },
-    { w: 'noodle', s: 'Fine. Quick rooftop chase. Then nap.' },
+    { w: 'cap', s: 'Every morning at 7:42, a sunbeam lands on Noodle’s windowsill. Perfect nap.' },
+    { w: 'cap', s: 'Today, it didn’t.' },
+    { w: 'noodle', s: 'No sunbeam, no nap. Someone’s going to pay.' },
   ],
   buzz: [
-    { w: 'buzz', s: 'Hop on. Hold jump to climb. Do not shed.' },
+    { w: 'buzz', s: 'Hop on. Hold jump to climb. Don’t shed.' },
+    { w: 'noodle', s: 'Fly fast. My nap’s on hold.' },
   ],
   rocco1: [
     { w: 'rocco', s: 'HALT! These bins are MINE, Loaf!' },
-    { w: 'noodle', s: 'I just want my sunbeam.' },
+    { w: 'noodle', s: 'Keep your bins. I want my sunbeam.' },
   ],
   rocco2: [
-    { w: 'rocco', s: 'Truce! I’m dizzy. I just live here.' },
-    { w: 'rocco', s: 'Jar thief? Big pigeon. Fancy hat. That way.' },
-    { w: 'noodle', s: 'Nap first.' },
+    { w: 'rocco', s: 'Truce! The sunshine thief? Big pigeon, fancy hat. That way.' },
+    { w: 'noodle', s: 'Every minute without sun is a minute without a nap.' },
   ],
   w2tease: [
-    { w: 'coo', s: 'Another jar of sunshine, boys. Who let the cat follow us?' },
+    { w: 'coo', s: 'Another jar of sunshine, boys. Who let the sleepy cat follow us?' },
     { w: 'cap', s: 'World 2 is coming soon.' },
   ],
 };
@@ -2322,6 +2343,7 @@ function updatePlay() {
   }
   if (g.inv > 0) g.inv--;
   if (inp.left || inp.right || inp.jump || !p.onGround) g.idle = 0; else g.idle++;
+  if (g.idle === 91 && inSun(g)) { SFX.pouch(); popWord(p.x + p.w / 2, p.y - 20, 'Ahh… sun.', COL.sun, 14); }
   if (g.rain) {
     g.rain.t--; if (g.rain.t <= 0) g.rain = null;
     else if (g.t % 7 === 0) g.rainFish.push({ x: rnd(g.rain.x0, g.rain.x1), y: (g.L.h - 13) * T, vy: 1.5, t: 0 });
@@ -2785,6 +2807,21 @@ function drawPart(q) {
   ctx.restore();
 }
 function drawDeco(d, t) {
+  if (d.k === 'sun') {
+    ctx.save(); ctx.globalAlpha = 0.28 + Math.sin(t * 0.04 + d.x) * 0.05;
+    const gr = ctx.createLinearGradient(0, d.y - 360, 0, d.y); gr.addColorStop(0, 'rgba(255,236,160,0)'); gr.addColorStop(1, '#FFE680');
+    ctx.fillStyle = gr; ctx.beginPath(); ctx.moveTo(d.x + d.w * 0.4, d.y - 360); ctx.lineTo(d.x + d.w * 1.3, d.y - 360); ctx.lineTo(d.x + d.w, d.y); ctx.lineTo(d.x, d.y); ctx.closePath(); ctx.fill();
+    ctx.globalAlpha = 0.5; el(d.x + d.w / 2, d.y - 2, d.w / 2, 5); ctx.fillStyle = '#FFE680'; ctx.fill();
+    ctx.restore(); return;
+  }
+  if (d.k === 'jar') {
+    ctx.save(); ctx.translate(d.x, d.y); ctx.rotate(d.tilt * 0.25);
+    rr(-9, -24, 18, 24, 5); ctx.fillStyle = 'rgba(220,240,255,.35)'; ctx.fill(); ctx.lineWidth = 2; ctx.strokeStyle = 'rgba(27,20,40,.7)'; ctx.stroke();
+    rr(-6, -29, 12, 6, 2); ctx.fillStyle = '#B08968'; ctx.fill(); ctx.stroke();
+    ctx.fillStyle = 'rgba(255,255,255,.55)'; ctx.fillRect(-5, -20, 2.5, 13);
+    ctx.globalAlpha = 0.5 + Math.sin(t * 0.08 + d.x) * 0.3; ci(2, -8, 2); ctx.fillStyle = '#FFE680'; ctx.fill();   // one last sparkle of sunshine
+    ctx.restore(); return;
+  }
   if (d.k === 'sign' && d.mix === 'flip') {
     const x = d.x, y = d.y;
     rr(x - 3, y - 40, 6, 40, 2); fs('#8D6B4F', 2);
@@ -2880,7 +2917,7 @@ function drawPlayer(g) {
   else if (!p.onGround) anim = p.gliding ? 'glide' : (p.vy < 0 ? 'jump' : 'fall');
   else if (p.skid) anim = 'skid';
   else if (Math.abs(p.vx) > 0.3) anim = 'run';
-  else if (g.idle > 600) anim = 'nap';
+  else if (g.idle > 90 && inSun(g)) anim = 'nap';
   else { const c = g.idle % 300; if (c > 220 && c < 270) yawn = Math.sin((c - 220) / 50 * Math.PI); if (c > 120 && c < 128) closed = true; }
   let sc = p.big ? 1.17 : 0.9;
   let power = p.power;
@@ -3041,7 +3078,9 @@ function renderDialog() {
   const size = Math.round(clamp(19 * U, 16, 26)), lh = size * 1.35;
   const bw = Math.min(VW - 32 - SAFE.l - SAFE.r, 820 * U), bx = (VW - bw) / 2;
   const nextW = 112 * U, textW = bw - 48 - nextW;
-  const lines = wrapLines(line.s, textW, size, FB);
+  const dfont = (cap ? 'italic 600 ' : '600 ') + size + 'px ' + FB;
+  const wrapF = str => { ctx.font = dfont; const out = []; let cur = ''; for (const w2 of str.split(' ')) { const t2 = cur ? cur + ' ' + w2 : w2; if (ctx.measureText(t2).width > textW && cur) { out.push(cur); cur = w2; } else cur = t2; } if (cur) out.push(cur); return out; };
+  const lines = wrapF(line.s);
   const bh = Math.max(lines.length * lh + 40 * U, 76 * U);
   const by = VH - SAFE.b - bh - 18;
   // portraits stand on the box
@@ -3056,8 +3095,8 @@ function renderDialog() {
     rr(tagX, by - 14 * U, tw, 28 * U, 14 * U); ctx.fillStyle = line.w === 'noodle' ? COL.orange : line.w === 'rocco' ? '#8C8A9C' : line.w === 'buzz' ? '#FFC23D' : '#4A2D5C'; ctx.fill();
     ctx.fillStyle = line.w === 'buzz' ? '#2E2140' : '#FFF3E0'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(nm, tagX + tw / 2, by + 1);
   }
-  const shown = wrapLines(line.s.slice(0, Math.floor(d.chars)), textW, size, FB);
-  ctx.font = (cap ? 'italic 600 ' : '600 ') + size + 'px ' + FB; ctx.fillStyle = cap ? '#FFF3E0' : '#2E2140'; ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
+  const shown = wrapF(line.s.slice(0, Math.floor(d.chars)));
+  ctx.font = dfont; ctx.fillStyle = cap ? '#FFF3E0' : '#2E2140'; ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
   const ty = by + bh / 2 - (lines.length - 1) * lh / 2;
   shown.forEach((l, i) => ctx.fillText(l, bx + 24, ty + i * lh));
   // Next (or Start on the last line)
@@ -3275,7 +3314,9 @@ function renderMap() {
     BTN.push({ x: x - r - 6, y: y - r - 6, w: r * 2 + 12, h: r * 2 + 30 * U, fn: () => { if (!open) return; if (mapSel === i) startLevel(mapW, i); else mapSel = i; } });
   });
   const [hx, hy] = pos[mapSel];
-  drawNoodle(hx, hy - 26 * U + Math.abs(Math.sin(T0 * 0.12)) * -4, { face: 1, t: T0, anim: 'idle', s: 0.85 * U });
+  const dozing = T0 - (window.lastInputT || 0) > 300;
+  drawNoodle(hx, hy - 26 * U + (dozing ? 6 * U : Math.abs(Math.sin(T0 * 0.12)) * -4), { face: 1, t: T0, anim: dozing ? 'nap' : 'idle', s: 0.85 * U });
+  if (dozing) for (let i = 0; i < 3; i++) { const kz = ((T0 * 0.4 + i * 33) % 100) / 100; ctx.save(); ctx.globalAlpha = 1 - kz; flatText('z', hx + 16 * U + kz * 14 * U, hy - 40 * U - kz * 24 * U, Math.round((10 + i * 3) * U), '#FFF3E0', 'center', '800 ' + FB); ctx.restore(); }
   // the card for the chosen level
   const lv = w.levels[mapSel], rec = levelRec(lv.id);
   const cw = Math.min(600 * U, VW - SAFE.l - SAFE.r - 40), ch = 92 * U, cx0 = VW / 2 - cw / 2, cy0 = VH - SAFE.b - ch - 16;
@@ -3423,6 +3464,8 @@ function drawPartyRoom(room, L, t) {
   for (let i = 0; i < 18; i++) { const sx = x0 + ((i * 97 + t * 0.6) % w), sy = top + 60 + ((i * 53 + t * 0.4) % (floor - top - 80)); ctx.globalAlpha = 0.4 + 0.4 * Math.sin(t * 0.1 + i); starPath(sx, sy, 3.5, 1.5); ctx.fillStyle = '#FFF3C4'; ctx.fill(); }
   ctx.restore();
 }
+
+function inSun(g) { const cx = g.p.x + g.p.w / 2, fy = g.p.y + g.p.h; return g.L.deco.some(d => d.k === 'sun' && cx > d.x && cx < d.x + d.w && Math.abs(fy - d.y) < 6); }
 </script>
 </body>
 </html>
