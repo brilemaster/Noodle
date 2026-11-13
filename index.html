@@ -7,6 +7,8 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black">
 <meta name="theme-color" content="#2B1B3D">
+<meta name="screen-orientation" content="landscape">
+<link rel="manifest" href="data:application/manifest+json,%7B%22name%22%3A%20%22Noodles%20and%20the%20Sunbeam%20Heist%22%2C%20%22short_name%22%3A%20%22Noodles%22%2C%20%22display%22%3A%20%22fullscreen%22%2C%20%22orientation%22%3A%20%22landscape%22%2C%20%22background_color%22%3A%20%22%232B1B3D%22%2C%20%22theme_color%22%3A%20%22%232B1B3D%22%2C%20%22start_url%22%3A%20%22.%22%7D">
 <title>Noodles and the Sunbeam Heist</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -42,7 +44,7 @@ canvas{position:fixed;left:0;top:0;display:block;touch-action:none}
 <script>
 'use strict';
 // ================= CORE: constants, physics, level data =================
-const VERSION = 28;
+const VERSION = 30;
 const T = 32;          // tile size in world units
 const LH = 16;         // level height in tiles
 const clamp = (v, a, b) => v < a ? a : (v > b ? b : v);
@@ -2013,19 +2015,21 @@ function drawBackground(th, camX, camY, maxCamY, t, secret) {
     const w = 1100, off = -((camX * SCALE * fac) % w), y = VH - hh + dy * fac * 0.6 + yAdj;
     ctx.save(); ctx.globalAlpha = alpha; for (let x = off; x < VW; x += w) ctx.drawImage(cv2, x, y, w, hh); ctx.restore();
   };
-  lay(BGC.far, 0.15, VH * 0.85, 0, secret ? 0.6 : 0.75);
+  const FARY = -VH * (VH < 520 ? 0.16 : 0.1);   // distant skyline lifted too
+  lay(BGC.far, 0.15, VH * 0.85, FARY, secret ? 0.6 : 0.75);
   if (!secret && !th.night) { if (th.town || th.nash) drawBiplane(camX, t, th.nash ? 'Y’ALL!' : 'HOWDY!'); else drawBlimp(camX, t); }
   // atmospheric haze between the far and near skylines
   const hz = ctx.createLinearGradient(0, VH * 0.4, 0, VH * 0.85); hz.addColorStop(0, 'rgba(0,0,0,0)'); hz.addColorStop(1, th.haze || '#FFFFFF');
   ctx.save(); ctx.globalAlpha = 0.35; ctx.fillStyle = hz; ctx.fillRect(0, VH * 0.4, VW, VH * 0.6); ctx.restore();
-  const MIDY = -VH * 0.2;   // near skyline sits well above the action
+  const MIDY = -VH * (VH < 520 ? 0.38 : 0.3);   // near skyline sits well above the action (more on short phone screens)
   lay(BGC.mid, 0.35, VH * 0.75, MIDY, 1);
   { const yb = VH + dy * 0.35 * 0.6 + MIDY - 1; if (yb < VH) { ctx.fillStyle = th.mid; ctx.fillRect(0, yb, VW, VH - yb); } }   // no gap under the raised buildings
   if (!secret) liveSkyline(BGC.mid, 0.35, VH * 0.75, MIDY, camX, dy, t);
   if (!secret) {
-    const hz2 = ctx.createLinearGradient(0, VH * 0.55, 0, VH);
+    const ph = VH < 520, hy0 = VH * (ph ? 0.4 : 0.55);   // phones: haze starts higher, the screen is short
+    const hz2 = ctx.createLinearGradient(0, hy0, 0, VH);
     hz2.addColorStop(0, 'rgba(0,0,0,0)'); hz2.addColorStop(0.45, th.haze || '#FFFFFF'); hz2.addColorStop(1, th.haze || '#FFFFFF');
-    ctx.save(); ctx.globalAlpha = th.night ? 0.45 : 0.6; ctx.fillStyle = hz2; ctx.fillRect(0, VH * 0.55, VH * 10, VH * 0.45); ctx.restore();
+    ctx.save(); ctx.globalAlpha = (th.night ? 0.45 : 0.6) + (ph ? 0.12 : 0); ctx.fillStyle = hz2; ctx.fillRect(0, hy0, VW * 4, VH - hy0); ctx.restore();
   }
   if (!secret && th.nash && BGC.mid.eq) {
     const w = 1100, hh = VH * 0.75, off = -((camX * SCALE * 0.35) % w), y0 = VH - hh + dy * 0.35 * 0.6 + MIDY;
@@ -2692,7 +2696,8 @@ function resize() {
   DPR = devR / ZF;   // all drawing happens in game units; this maps them onto the real canvas pixels
   // zoom from the real visible height: phones see ~11 tiles, big screens up to 15.5
   const phone = VH < 520;
-  SCALE = phone ? VH / (11 * T) : Math.max(VH / (15.5 * T), Math.min(VH / (LH * T), VW / (30 * T)));
+  // size the world from the width on tablets/computers, so browser bars never shrink it (still at least ~11 tiles tall)
+  SCALE = phone ? VH / (11 * T) : Math.min(VW / (22.5 * T), VH / (11 * T));
   U = clamp(Math.min(VW, VH * 1.7) / 660, 0.72, 1.8);
   const sd = document.getElementById('safe');
   if (sd) { const cs = getComputedStyle(sd); SAFE.t = (parseFloat(cs.paddingTop) || 0) * ZF; SAFE.r = (parseFloat(cs.paddingRight) || 0) * ZF; SAFE.b = (parseFloat(cs.paddingBottom) || 0) * ZF; SAFE.l = (parseFloat(cs.paddingLeft) || 0) * ZF; }
@@ -2750,7 +2755,7 @@ function readInput() {
 }
 function ctrlLayout() {
   // laid out like Super Noah: fully on screen, a thumb's width in from the edges, jump the biggest
-  const bs = clamp(Math.min(VH * 0.125, VW * 0.085), 70, 104);   // arrows (and yarn)
+  const bs = clamp(Math.min(VH * 0.16, VW * 0.085), 70, 104);   // arrows (and yarn); width-led so browser bars don't shrink them
   const js = bs * 1.22;                                          // jump
   const edge = 18, bottom = 8 + SAFE.b * 0.3;
   const by = VH - bottom - bs / 2;
@@ -3666,6 +3671,7 @@ function resumeGame() { S = 'play'; clearInputs(); }
 
 // --------- title actions ---------
 function titlePlay() {
+  if (TOUCH_DEV && SAVE.autoFull !== false) goFullscreen();
   if (!prof()) { askName(); return; }
   const pr = prof();
   mapW = 0; mapSel = firstOpenLevel(0);
@@ -3723,7 +3729,24 @@ function render() {
   }
   if (rotateBlocked()) renderRotate();
 }
-function rotateBlocked() { return showTouch && VH > VW * 1.05; }
+const TOUCH_DEV = ('ontouchstart' in window) || (typeof navigator !== 'undefined' && navigator.maxTouchPoints > 0);
+function rotateBlocked() { return (showTouch || TOUCH_DEV) && VH > VW * 1.05; }
+// ---- full screen + landscape where the browser allows it ----
+const IS_STANDALONE = !!((window.navigator && window.navigator.standalone) || (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) || (window.matchMedia && window.matchMedia('(display-mode: fullscreen)').matches));
+const IS_IPHONE = typeof navigator !== 'undefined' && /iPhone|iPod/.test(navigator.userAgent || '');
+function canFullscreen() { const d = document.documentElement; return !!d && !IS_STANDALONE && !!(d.requestFullscreen || d.webkitRequestFullscreen) && !IS_IPHONE; }
+function isFullscreen() { return !!(document.fullscreenElement || document.webkitFullscreenElement); }
+function goFullscreen() {
+  if (!canFullscreen() || isFullscreen()) return;
+  const d = document.documentElement;
+  try {
+    const p = d.requestFullscreen ? d.requestFullscreen({ navigationUI: 'hide' }) : d.webkitRequestFullscreen();
+    const lock = () => { try { if (screen.orientation && screen.orientation.lock) screen.orientation.lock('landscape').catch(() => {}); } catch (e) {} };
+    if (p && p.then) p.then(lock).catch(() => {}); else lock();
+  } catch (e) {}
+  setTimeout(resize, 300);
+}
+function exitFullscreen() { try { if (document.exitFullscreen) document.exitFullscreen(); else if (document.webkitExitFullscreen) document.webkitExitFullscreen(); } catch (e) {} setTimeout(resize, 300); }
 function renderRotate() {
   ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
   ctx.fillStyle = '#2B1B3D'; ctx.fillRect(0, 0, VW, VH);
@@ -4219,6 +4242,16 @@ function renderTitle() {
   }
   soundButtons(VW - SAFE.r - 24, VH - SAFE.b - 48, 18 * U);
   txt('v' + VERSION, VW - SAFE.r - 14, VH - SAFE.b - 14, 13, '#F6DCCB', 'right', FB, 0);
+  if (canFullscreen()) {
+    const fsOn = isFullscreen(), fw = (fsOn ? 150 : 132) * U;
+    flatPill(SAFE.l + 14, SAFE.t + 14, fw, 38 * U, fsOn ? '⤡ Exit full screen' : '⤢ Full screen', () => { if (isFullscreen()) exitFullscreen(); else goFullscreen(); },
+      { bg: 'rgba(255,246,234,.85)', fg: '#2E2140', size: Math.round(14 * U) });
+  } else if (IS_IPHONE && !IS_STANDALONE) {
+    const tip = 'For full screen: tap Share, then Add to Home Screen';
+    ctx.font = '700 ' + Math.round(12 * U) + 'px ' + FB; const tw = ctx.measureText(tip).width + 24 * U;
+    rr(VW / 2 - tw / 2, VH - SAFE.b - 40 * U, tw, 28 * U, 14 * U); ctx.fillStyle = 'rgba(46,33,64,.72)'; ctx.fill();
+    flatText(tip, VW / 2, VH - SAFE.b - 26 * U, Math.round(12 * U), '#FFF3E0', 'center', '700 ' + FB);
+  }
 }
 function renderSettings() {
   goldenBg(T0);
