@@ -1,10 +1,12 @@
 # Noodle and the Sunbeam Heist — handoff guide
 
-Current version: **v19** (shown bottom-right of the title screen). Check a deploy with `?v=19`.
+Current version: **v21** (shown bottom-right of the title screen). Check a deploy with `?v=21`.
 
 ## Changelog
 - v1: World 1 built.
 - v2: game-feel update (owner asked: keep art, make it feel like a snappy Mario game). New movement physics, animation, juice, power-ups, treasures, flagpole, HUD clarity.
+- v21: readability: the near skyline layer is raised (`MIDY = -VH*0.1` in drawBackground; EQ meters, notes and SkyTrain use the same offset) and a soft haze gradient covers the lower 45% of the screen behind the action, so busy buildings never compete with Noodle. Applies to every city. Owner rule: backgrounds must never make the action hard to read.
+- v20: **City 1 is now Nashville**, Noodle's hometown (owner and husband met and married there in 2015; he is an audio engineer). Start and finale are Nashville (replaces Magnolia Holler). Levels: Broadway Mornin', Honky-Tonk Hop, Music Row Wires, Ryman Rooftops, Hot Chicken Alley (Rocco). Themes 0–4 now `nash: true` → `makeNashLayer`: far = Batman (AT&T) tower, skyline, Cumberland River footbridge, and a **tiny distant pink neon "J ♥ B · 2015" sign** (owner wants it subtle, a secret for the two of them; keep it small and far away). Mid = Broadway honky-tonks with vertical neon blade signs (HONKY TONK, LIVE MUSIC, BOOTS…), neon boots/guitars, the Ryman. Music visuals: animated rooftop EQ meters and music notes drifting from windows, springs drawn as amp stacks (note-particle burst), secret rooms show a red ON AIR sign. Biplane banner says Y'ALL!. New song `honky` (twang voice) for 1-1 and 1-3. Finds: Tiny wedding ring ("Where it all began. Nashville, 2015. J ♥ B."), Guitar pick, Studio headphones, Mixing-desk fader. Buzz stays in 1-4 (route needs flying).
 - v19: **City 2: Bangkok (during Songkran) built.** Levels 2-1 Soi Sunrise, 2-2 Songkran Splash, 2-3 Tangled Wires, 2-4 Tuk-Tuk Dash, 2-5 Lumpini Lake (boss Big Lou). New themes 5–9 (`bkk: true`): skyscraper + golden temple-spire far layer, shophouses with neon/shop signs, tangled wires, SkyTrain line with an animated train, concrete roof caps. New mechanics: Lumpini monitor **lizards** (`lizard()`; can't be beaten: stomp = big bounce, side bump = gentle push with no damage, yarn/slide/zoomies/tuk-tuk flip them for 3s), **Songkran water jets** (`spray()`, fans that also push sideways via `push`), **tuk-tuk** ride (`tuk()`, `L.drone.kind = 'tuk'`: ground ride, top speed 6.5, normal jumps, flips lizards). Big Lou reuses the Rocco boss engine with `arena.kind = 'lou'` (sunning rocks instead of bins, water balls instead of lids, naps in the sun when bop-able). New scenes: bkk1, tuk, lou1, lou2, w3tease; ending of City 1 now says "Next stop: THAILAND." Nap Sack now has one page per city (arrows). Two new songs: `soi`, `songkran`. 15 new finds. All levels pass the normal-player reachability check; Lou and Rocco bot fights pass.
 - v18: touch controls nudged lower (bottom gap 8px + 30% of the home-indicator inset).
 - v17: touch controls laid out like Super Noah (owner's reference): fully on screen, ~18px in from the side edges and ~20px up from the bottom; arrows ~12.5% of screen height (70–104px), jump 1.22× bigger at bottom-right, yarn the same size as the arrows just left of jump. (v16's tucked-off-edge buttons felt wrong in the hand.)
@@ -35,13 +37,13 @@ A Mario-style browser platformer for friends and family (teens and adults). One 
 - The original "no holidays, no magic, no luck themes" rules are **lifted**. Holidays/festivals (e.g. Songkran, Yi Peng/Loy Krathong), magical touches and lucky items are all fine. Owner: "No boundaries here, let's get fun." Still keep it family-friendly. Temples stay as background scenery (cultural courtesy).
 
 ## The journey (approved plan)
-1. **Magnolia Holler** (home, built in v15) → nap on a jar crate → cargo plane.
+1. **Nashville** (home, v20; was Magnolia Holler in v15) → nap on a jar crate at the Nashville airport → cargo plane.
 2. **Bangkok during Songkran**: water-fight crowds that push you back, buckets, water balloons, tuk-tuk ride, Lumpini Park monitor lizards as obstacles you bounce off; boss Big Lou the monitor lizard.
 3. **Chiang Mai**: misty jungle, bamboo bridges, waterfalls, Yi Peng lantern night level (floating lantern platforms), elephant buddy; boss a jar-hoarding macaque.
 4. **Krabi**: limestone cliffs, beach caves, longtail boats, wall-jumps, fish-stealing monkeys; boss a grumpy upside-down fruit bat.
 5. **Phuket**: Old Town shophouses, beaches, rising/falling tide; boss a hermit crab wanting a sunbeam-jar shell.
 6. **Koh Samui**: coconut groves, bungalows, full-moon beach party, coconut cannons, wave surfing; boss a giant coconut crab who reveals the next country.
-7. More countries (to brainstorm with owner), then home to Magnolia Holler for the finale (Don Coo's sunbeam garden). ~5 levels per city, levels ~2–3 minutes, build one city per update.
+7. More countries (to brainstorm with owner), then home to Nashville for the finale (Don Coo's sunbeam garden). ~5 levels per city, levels ~2–3 minutes, build one city per update.
 
 ## Story so far (approved)
 - Core idea (owner emphasised in v13): Noodle can only nap properly in a sunbeam. Every morning at 7:42 a sunbeam lands on Noodle's windowsill; one day it doesn't. "No sunbeam, no nap." Ending: Don Coo was bottling sunbeams to grow a rooftop garden; he shares, and Noodle naps in the best sunbeam in town.
