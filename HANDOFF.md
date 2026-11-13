@@ -1,12 +1,13 @@
 # Noodle and the Sunbeam Heist — handoff guide
 
-Current version: **v25** (shown bottom-right of the title screen). Check a deploy with `?v=25`.
+Current version: **v26** (shown bottom-right of the title screen). Check a deploy with `?v=26`.
 
-**Test mode:** add `?unlock` (or `&unlock`) to the link, e.g. `https://brilemaster.github.io/Noodle/?v=25&unlock`, to open every built level without saving anything as cleared. The map shows "TEST MODE". Remove it from the link to play normally.
+**Test mode:** add `?unlock` (or `&unlock`) to the link, e.g. `https://brilemaster.github.io/Noodle/?v=26&unlock`, to open every built level without saving anything as cleared. The map shows "TEST MODE". Remove it from the link to play normally.
 
 ## Changelog
 - v1: World 1 built.
 - v2: game-feel update (owner asked: keep art, make it feel like a snappy Mario game). New movement physics, animation, juice, power-ups, treasures, flagpole, HUD clarity.
+- v26: **Songkran splashers** in Bangkok (`squirt(L, x, s, face)`; 2 in Soi Sunrise, 4 in Songkran Splash, 2 in Tuk-Tuk Dash): wind up with a "!" for ~20 frames, then fire a 6-drop water stream along the street at Noodle's chest height. Jump it. A hit = "Splash!", knockback and **soaked** for 2.5s (30% slower, dripping; `p.soak`), no heart lost. Yarn makes a splasher stop and laugh for 5s. Lizards now stay flipped 6s (was 3s), blink before waking, and are completely harmless while flipped (you can still bounce on their bellies).
 - v25: fixed 2-3 Tangled Wires gaps a real player couldn't cross (the 9-tile single-cable gap is now 4 tiles; first gap 7→5; long double-cable gap split by a rooftop island). New `test/gaps.js` flags open gaps wider than 5 tiles with no helper (the reachability checker can find frame-perfect routes humans can't). Added `?unlock` test mode (`TEST_UNLOCK`).
 - v24: in-game **☰ Menu** pill at top-right (replaces the round pause icon; opens Resume / Restart level / World map / Home). Secret rooms: five bright schemes in `SECRET_VARIANTS` (Disco Pink dots, Aqua Arcade stripes, Golden JACKPOT! stars, Mint Jam checker, Neon Grape zigzag), one per level via `secretTheme(L, room)` so every room in a city differs; wallpaper pattern, disco ball with light spots, brighter spotlights, bigger string lights; Nashville rooms still say ON AIR. `secretRoom()` adds two tiles of headroom; vine poles extend up to the ceiling (`v.pole`). Fish collection sparkle: burst of big gold/white stars, gold shimmer ring, quick white flash, and the HUD fish count bumps and flashes gold (`g.fishBump`). All ten levels re-checked.
 - v23: near skyline raised further (`MIDY = -VH*0.2`), with the strip under the raised layer filled in the layer colour so no gap shows. Browser zoom fix from v22 kept.

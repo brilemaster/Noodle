@@ -42,7 +42,7 @@ canvas{position:fixed;left:0;top:0;display:block;touch-action:none}
 <script>
 'use strict';
 // ================= CORE: constants, physics, level data =================
-const VERSION = 25;
+const VERSION = 26;
 const T = 32;          // tile size in world units
 const LH = 16;         // level height in tiles
 const clamp = (v, a, b) => v < a ? a : (v > b ? b : v);
@@ -283,6 +283,7 @@ function stepPlayer(p, inp, L, ev) {
     const wasGround = p.onGround;
     p.holdJump = inp.jump;
     let acc = p.onGround ? PH.ACC : PH.AACC, max = p.zoom > 0 ? PH.ZRUN : PH.RUN;
+    if (p.soak > 0) max *= 0.7;   // soaked by a Songkran splasher: a bit slower
     if (p.riding && L.drone && L.drone.kind === 'tuk') max = 6.5;
     if (MOVE.easy) { max *= 0.45; acc *= 0.35; }
     // slopes: running downhill turns into a belly-slide
@@ -461,6 +462,7 @@ function secretRoom(L, x0, x1, floor, ceil) {
 const drone = (L, x, h) => { L.drone = { x: x * T - 4, y: (L.h - h) * T + 8, w: 40, h: 18, hx: x * T - 4, hy: (L.h - h) * T + 8, ready: true, gone: false }; };
 const lizard = (L, x, s) => L.enemies.push({ k: 'lizard', x: x * T, y: (L.h - s) * T - 24, w: 60, h: 24 });
 const spray = (L, x, s, hh, push) => L.fans.push({ x: x * T - 6, w: T + 12, base: (L.h - s) * T, top: (L.h - s - hh) * T, tx: x, s, water: true, push: push || 0 });
+const squirt = (L, x, s, face) => (L.squirts || (L.squirts = [])).push({ x: x * T + 16, y: (L.h - s) * T, face: face || -1 });
 const tuk = (L, x, s) => { L.drone = { kind: 'tuk', x: x * T - 4, y: (L.h - s) * T - 18, w: 44, h: 18, hx: x * T - 4, hy: (L.h - s) * T - 18, ready: true, gone: false }; };
 const dropoff = (L, x0, x1, s) => { L.dropoff = { x: x0 * T, y: 0, w: (x1 - x0 + 1) * T, h: (L.h - s) * T, used: false, tx: x0, s }; };
 
@@ -715,10 +717,10 @@ function b21() {
   plat(L, 36, 39, 6); token(L, 38, 7, 0); coin(L, 36, 7); coin(L, 37, 7); coin(L, 39, 7);
   lizard(L, 44, 3);
   fill(L, 50, 51, 4, 5, 'W'); coins(L, 50, 51, 6);
-  pigeon(L, 55, 3);
+  squirt(L, 57, 3, -1);
   trail(L, [[58, 6], [59, 7], [60, 7], [61, 7], [62, 6]]);
   ground(L, 62, 96, 3);
-  flag(L, 66, 3);
+  flag(L, 66, 3); squirt(L, 72, 3, -1);
   slopeUp(L, 74, 3, 3); ground(L, 77, 82, 6); slopeDown(L, 83, 6, 3);
   coins(L, 77, 82, 7);
   plat(L, 78, 80, 9); gold(L, 78, 10);
@@ -748,25 +750,25 @@ function b22() {
   tile(L, 8, 7, '?'); tile(L, 9, 7, 'U');
   spray(L, 14, 3, 6, 1); trail(L, [[14, 5], [14, 6], [14, 7], [14, 8]]);
   tile(L, 19, 4, '^'); trail(L, [[19, 7], [20, 9], [21, 10]]);
-  ground(L, 23, 34, 7); coins(L, 24, 33, 8);
+  ground(L, 23, 34, 7); coins(L, 24, 33, 8); squirt(L, 34, 7, -1);
   lizard(L, 28, 7);
   ground(L, 35, 60, 3);
   spray(L, 40, 3, 6, 1); trail(L, [[40, 5], [40, 6], [40, 7], [40, 8]]);
   plat(L, 44, 47, 6); token(L, 46, 7, 0); coin(L, 44, 7); coin(L, 45, 7);
-  spray(L, 52, 3, 6, -1); pigeon(L, 56, 3);
+  spray(L, 52, 3, 6, -1); squirt(L, 59, 3, -1);
   trail(L, [[60, 6], [61, 7]]);
   fill(L, 64, 65, 1, 3); tile(L, 64, 4, '^'); tile(L, 65, 4, '^');
   trail(L, [[64, 8], [65, 10], [67, 9]]);
   ground(L, 69, 100, 3);
   flag(L, 72, 3);
-  spray(L, 80, 3, 6, 1); lizard(L, 84, 3);
+  spray(L, 80, 3, 6, 1); lizard(L, 84, 3); squirt(L, 99, 3, -1);
   spray(L, 89, 3, 9, 0); token(L, 89, 11, 1); trail(L, [[89, 5], [89, 7], [89, 9]]);
   plat(L, 93, 95, 6); gold(L, 93, 7);
   warp(L, 95, 7, 1, 2, 157, 3, 'window');
   trail(L, [[100, 6], [101, 7], [102, 7], [103, 7], [104, 6]]);
   ground(L, 104, 151, 3);
   tile(L, 108, 7, '?'); tile(L, 109, 7, 'M');
-  spray(L, 114, 3, 6, 1); lizard(L, 120, 3); flyer(L, 126, 8);
+  spray(L, 114, 3, 6, 1); lizard(L, 120, 3); flyer(L, 126, 8); squirt(L, 128, 3, -1);
   coins(L, 116, 119, 4);
   for (let i = 0; i < 4; i++) { fill(L, 130 + i, 130 + i, 4, 4 + i); coin(L, 130 + i, 5 + i); }
   fill(L, 134, 135, 4, 7);
@@ -822,10 +824,10 @@ function b24() {
   lizard(L, 22, 3);
   trail(L, [[30, 6], [31, 8], [32, 8], [33, 6]]);
   ground(L, 34, 55, 3);
-  coins(L, 36, 53, 5); lizard(L, 44, 3);
+  coins(L, 36, 53, 5); lizard(L, 44, 3); squirt(L, 54, 3, -1);
   trail(L, [[55, 6], [58, 6]]); token(L, 56, 7, 0); coin(L, 57, 7);
   ground(L, 59, 80, 3);
-  lizard(L, 66, 3); lizard(L, 74, 3); coins(L, 61, 78, 4);
+  lizard(L, 66, 3); lizard(L, 74, 3); coins(L, 61, 78, 4); squirt(L, 79, 3, -1);
   trail(L, [[80, 6], [81, 8], [82, 8], [83, 6]]);
   ground(L, 84, 151, 3);
   dropoff(L, 96, 100, 3);
@@ -2634,7 +2636,8 @@ function startLevel(wi, li) {
   if (wi === 0 && li === 0 && !showTouch && !pr.hints.keys) { pr.hints.keys = true; persist(); toast('Arrow keys to move, Space to jump, X throws your yarn ball.'); }
   else if (wi === 0 && li === 0 && showTouch && !pr.hints.sprint) { pr.hints.sprint = true; persist(); toast('The pink button throws your yarn ball. It comes back!'); }
   if (!showTouch && !pr.hints.yarnKey) { pr.hints.yarnKey = true; persist(); if (wi || li) toast('Press X to throw your yarn ball. It comes back!'); }
-  G.yarn = null; G.streak = 0; G.streakT = -99; G.nextHundred = 100;
+  G.yarn = null; G.streak = 0; G.streakT = -99; G.nextHundred = 100; G.drops = [];
+  for (const q of (L.squirts || [])) { q.t = Math.floor(Math.random() * 120); q.stun = 0; }
   if (def.id === '2-1' && !pr.seen.bkk1) startScene('bkk1', null);
   G.groupLeft = {}; for (const it of L.items) if (it.gid) G.groupLeft[it.gid] = (G.groupLeft[it.gid] || 0) + 1;
 }
@@ -2971,7 +2974,7 @@ function updatePlay() {
     if (f.y > (g.L.h - 3) * T || f.t > 400) f.got = true;
   }
   g.rainFish = g.rainFish.filter(f => !f.got);
-  updateEnemies(); updateItems(); updatePowers(); updateYarn(); updateDrone(); updateBoss(); updateLids();
+  updateEnemies(); updateSquirts(); updateItems(); updatePowers(); updateYarn(); updateDrone(); updateBoss(); updateLids();
   for (const f of L.flags) if (!f.got && rectHit(p, f)) {
     f.got = true; g.check = { tx: f.tx, s: f.s }; SFX.flag(); popWord(f.x + 12, f.y - 8, 'Checkpoint!', COL.mint, 16); burst(f.x + 12, f.y + 10, 14, [COL.mint, COL.white], 3, 'star');
   }
@@ -3096,6 +3099,7 @@ function updateYarn() {
   if (y.t > 260) { g.yarn = null; return; }
   const yr = { x: y.x - 11, y: y.y - 11, w: 22, h: 22 };
   for (const e of L.enemies) if (!e.dead && e.active && !y.hit.has(e) && rectHit(yr, e)) { y.hit.add(e); killEnemy(e, 'yarn'); }
+  for (const q of (L.squirts || [])) if (!y.hit.has(q) && rectHit(yr, { x: q.x - 16, y: q.y - 50, w: 32, h: 50 })) { y.hit.add(q); q.stun = 300; q.t = 0; popWord(q.x, q.y - 60, 'Haha, okay!', '#7FD8FF', 14); SFX.bop(1); }
   for (const l of g.lids) if (!l.dead && Math.hypot(l.x - y.x, l.y - y.y) < 22) { l.dead = true; SFX.clang(); burst(l.x, l.y, 8, [COL.grey, COL.white]); }
   // the yarn reels in any fish it touches
   for (const it of L.items) if (!it.got && (it.k === 'coin' || it.k === 'gold') && Math.hypot(it.x - y.x, it.y - y.y) < 20) collect(it);
@@ -3405,9 +3409,10 @@ function renderPlay(frozen) {
       else { ctx.save(); ctx.translate(e.x + e.w / 2, e.y + e.h / 2); ctx.rotate(e.rot); drawPigeon(0, e.h / 2, e.face, 0, e.k === 'flyer'); ctx.restore(); }
       continue;
     }
-    if (e.k === 'lizard') drawLizard(e.x + e.w / 2, e.y + e.h, e.face, e.t + e.ph * 20, 1, e.stun > 0);
+    if (e.k === 'lizard') { if (!(e.stun > 0 && e.stun < 70 && Math.floor(e.stun / 6) % 2)) drawLizard(e.x + e.w / 2, e.y + e.h, e.face, e.t + e.ph * 20, 1, e.stun > 0); }
     else drawPigeon(e.x + e.w / 2, e.y + e.h, e.face, e.t + e.ph * 20, e.k === 'flyer');
   }
+  drawSquirts(g);
   if (g.boss) drawBossFront(g.boss, g);
   const d = L.drone;
   if (d && !(d.gone && d.x > g.cam.x + vw + 100)) { if (d.kind === 'tuk') drawTuk(d.x, d.y - 6, g.t, p.riding || d.gone); else drawBuzz(d.x + 20, d.y, g.t, 1, p.riding ? 'happy' : null); }
@@ -4165,15 +4170,16 @@ function drawPearl(x, y, s) {
 // Lumpini lizards can't be beaten, only bounced on, flipped over, or politely avoided
 function stunLizard(e) {
   const g = G; if (e.stun > 0) return;
-  e.stun = 180; SFX.bop(1); g.shake = Math.max(g.shake, 3);
+  e.stun = 360; SFX.bop(1); g.shake = Math.max(g.shake, 3);
   popWord(e.x + e.w / 2, e.y - 6, 'Flipped!', COL.sun, 14);
   burst(e.x + e.w / 2, e.y + e.h / 2, 8, [COL.sun, COL.white], 3, 'star');
 }
 function lizardTouch(e) {
   const g = G, p = g.p;
   const riding = p.riding && g.L.drone && g.L.drone.kind === 'tuk';
-  if (p.zoom > 0 || p.sliding || riding) { stunLizard(e); return; }
   const prevB = p.y + p.h - p.vy;
+  if (e.stun > 0 && !(p.vy > 0 && prevB <= e.y + 12)) return;   // flipped lizards are harmless
+  if (e.stun <= 0 && (p.zoom > 0 || p.sliding || riding)) { stunLizard(e); return; }
   if (p.vy > 0 && prevB <= e.y + 12) {
     p.y = e.y - p.h; p.vy = inp.jump ? -17 : -14; p.jumping = inp.jump; p.jumpT = 3; p.onGround = false;
     SFX.boing(); haptic(15); g.squash = -0.3; g.score += 50;
@@ -4197,6 +4203,54 @@ function drawRock(x, gy) {
 function drawWaterBall(x, y, t) {
   ci(x, y, 11); ctx.fillStyle = 'rgba(127,216,255,.9)'; ctx.fill(); ink(2); ctx.stroke();
   ci(x - 4, y - 4, 3); ctx.fillStyle = '#FFFFFF'; ctx.fill();
+}
+
+// Songkran splashers: wind up ("!"), then fire a stream of water down the street. Jump it!
+function updateSquirts() {
+  const g = G, L = g.L, p = g.p, vw = VW / SCALE;
+  if (!g.drops) g.drops = [];
+  if (p.soak > 0) { p.soak--; if (g.t % 7 === 0) g.parts.push({ x: p.x + Math.random() * p.w, y: p.y + p.h - 4, vx: 0, vy: 1, life: 16, t: 0, c: '#7FD8FF', s: 1.5, g: 0.2, kind: 'feather', r: 0 }); }
+  for (const q of (L.squirts || [])) {
+    if (Math.abs(q.x - (g.cam.x + vw / 2)) > vw / 2 + 200) continue;
+    if (q.stun > 0) { q.stun--; continue; }
+    q.t++;
+    const c = q.t % 170;
+    if (c >= 150) q.aim = true; else q.aim = false;
+    if (c === 0 && q.t > 0) q.fire = 18;
+    if (q.fire > 0) { if (q.fire % 3 === 0) g.drops.push({ x: q.x + q.face * 26, y: q.y - 26 + Math.sin(q.fire) * 2, vx: q.face * 7.5, t: 0 }); q.fire--; if (q.fire === 17 && Math.abs(q.x - p.x) < vw) SFX.swing(); }
+  }
+  for (const d of g.drops) {
+    d.x += d.vx; d.t++;
+    if (d.t > 70 || isSolid(L, Math.floor(d.x / T), Math.floor(d.y / T))) { d.dead = true; burst(d.x, d.y, 3, ['#7FD8FF', '#FFFFFF'], 2, 'star'); continue; }
+    if (!g.dying && g.clearT < 0 && d.x > p.x - 6 && d.x < p.x + p.w + 6 && d.y > p.y - 4 && d.y < p.y + p.h + 4) {
+      d.dead = true;
+      if (!(p.soak > 100)) {
+        p.soak = 150; p.vx = Math.sign(d.vx) * 4.5; p.vy = Math.min(p.vy, -3); p.onGround = false;
+        popWord(p.x + p.w / 2, p.y - 16, 'Splash!', '#7FD8FF', 16); SFX.swing(); haptic(20); g.shake = Math.max(g.shake, 3);
+        burst(p.x + p.w / 2, p.y + p.h / 2, 14, ['#7FD8FF', '#FFFFFF', '#3FB4FF'], 4, 'star');
+      }
+    }
+  }
+  g.drops = g.drops.filter(d => !d.dead);
+}
+function drawSquirts(g) {
+  for (const q of (g.L.squirts || [])) drawSquirter(q.x, q.y, q.face, g.t, q.aim && !q.stun, q.stun > 0);
+  for (const d of (g.drops || [])) { ctx.save(); el(d.x, d.y, 9, 5.5); ctx.fillStyle = 'rgba(127,216,255,.95)'; ctx.fill(); ink(1.4); ctx.stroke(); ci(d.x - 3, d.y - 2, 1.8); ctx.fillStyle = '#FFFFFF'; ctx.fill(); ctx.restore(); }
+}
+// a Songkran reveler: flower shirt, swim goggles, big pink water gun
+function drawSquirter(x, y, face, t, aim, laughing) {
+  ctx.save(); ctx.translate(x, y); ctx.scale(face, 1);
+  const bob = laughing ? Math.abs(Math.sin(t * 0.3)) * 3 : 0, shake = aim ? Math.sin(t * 1.5) * 1.5 : 0;
+  ctx.translate(shake, -bob);
+  rr(-9, -16, 7, 16, 3); fs('#3A4A7A', 2); rr(2, -16, 7, 16, 3); fs('#3A4A7A', 2);           // shorts / legs
+  rr(-12, -38, 24, 24, 8); fs('#3FA8E0', 2.4);                                               // flower shirt
+  ctx.fillStyle = '#FF8FC7'; for (const [a, b] of [[-6, -32], [5, -27], [-3, -21], [7, -35]]) { ci(a, b, 2.6); ctx.fill(); }
+  ci(0, -48, 11); ctx.fillStyle = vgrad(-60, -37, '#E9B48C', '#D09A72'); ctx.fill(); ink(2.2); ctx.stroke();
+  rr(-11, -54, 22, 6, 3); fs('#2A2238', 1.4); ci(4, -51, 3.4); ctx.fillStyle = '#7FD8FF'; ctx.fill();  // goggles
+  ctx.beginPath(); ctx.arc(-2, -44, 4, 0.2, Math.PI - 0.2); ink(1.6); ctx.stroke();           // grin
+  rr(4, -32, 26, 9, 4); fs('#FF5FA2', 2); rr(10, -40, 9, 9, 3); fs('#FFE14F', 1.6); rr(28, -30, 6, 5, 2); fs('#FF5FA2', 1.4);   // water gun
+  ctx.restore();
+  if (aim) { ctx.save(); ctx.fillStyle = '#FFFFFF'; ctx.strokeStyle = COL.ink; ctx.lineWidth = 3; ctx.font = '800 22px ' + FB; ctx.textAlign = 'center'; ctx.strokeText('!', x, y - 70); ctx.fillText('!', x, y - 70); ctx.restore(); }
 }
 </script>
 </body>
