@@ -1,12 +1,13 @@
 # Noodle and the Sunbeam Heist — handoff guide
 
-Current version: **v48** (shown bottom-right of the title screen). Check a deploy with `?v=48`.
+Current version: **v49** (shown bottom-right of the title screen). Check a deploy with `?v=49`.
 
 **Test mode:** add `?unlock` (or `&unlock`) to the link, e.g. `https://brilemaster.github.io/Noodles/?v=42&unlock`, to open every built level without saving anything as cleared. The map shows "TEST MODE". Remove it from the link to play normally.
 
 ## Changelog
 - v1: World 1 built.
 - v2: game-feel update (owner asked: keep art, make it feel like a snappy Mario game). New movement physics, animation, juice, power-ups, treasures, flagpole, HUD clarity.
+- v49: Noodles **always starts on the first rooftop** when you open the map from Home or flip countries (owner: "it's classic"). Coming back from a level still puts him on the level you just played.
 - v48: map button fixes. **Taps:** `uiTap` checks BTN from the END (last pushed wins), so the rooftop arrows and Play bubble are now pushed last; before, the roof under an arrow stole the tap (and could even start a level). **Locked city:** no Noodles, sunbeam or Play bubble, just a note "Finish <previous city> to fly here"; if a chosen stop is locked in an open city, the map snaps to the furthest open one. Noodles now sits right on every roof (was floating on odd stops); a bit higher on Chiang Mai's peaked roofs.
 - v47: map rooftops back to the big full-width spread (owner: shrinking it cheapened the look). The rooftop arrows float over the buildings, a little see-through.
 - v46: map arrows reworked (owner). Country arrows stay beside the big title but are larger (46·U); title a bit bigger. The rooftop arrows now copy the in-game move arrows exactly (same size and spot from `ctrlLayout`, side by side in the bottom-left) and **only move between rooftops in this country**; they dim at the ends. Rooftops start to the right of those arrows. TEST MODE tag is bottom-right. Keyboard ←/→ on the map still roll into the next country.

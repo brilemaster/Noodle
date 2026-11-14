@@ -44,7 +44,7 @@ canvas{position:fixed;left:0;top:0;display:block;touch-action:none}
 <script>
 'use strict';
 // ================= CORE: constants, physics, level data =================
-const VERSION = 48;
+const VERSION = 49;
 const T = 32;          // tile size in world units
 const LH = 16;         // level height in tiles
 const clamp = (v, a, b) => v < a ? a : (v > b ? b : v);
@@ -4960,7 +4960,7 @@ function titlePlay() {
   if (TOUCH_DEV && SAVE.autoFull !== false) goFullscreen();
   if (!prof()) { S = 'profiles'; askName('profiles', 'play'); return; }
   const pr = prof();
-  mapW = 0; mapSel = firstOpenLevel(0);
+  mapW = 0; mapSel = 0;   // Noodles always starts on the first rooftop
   if (!pr.seen.intro) { S = 'map'; startScene('intro', null); DLG.back = 'map'; DLG.bg = 'title'; }
   else S = 'map';
 }
@@ -5720,8 +5720,8 @@ function renderMap() {
   const tsz = Math.round(Math.min(64 * U, VH * 0.1)), ty2 = top + 22 * U;
   outlineText(w.name, VW / 2, ty2, tsz, '#FFF3E0', '700 ' + tsz + 'px ' + FT);
   ctx.font = '700 ' + tsz + 'px ' + FT; const aw = Math.max(40, 46 * U), half = ctx.measureText(w.name).width / 2 + 18 * U;
-  if (mapW > 0) arrowBtn(VW / 2 - half - aw, ty2 - aw / 2, aw, -1, () => { mapW--; mapSel = WORLDS[mapW].ready ? firstOpenLevel(mapW) : 0; });
-  if (mapW < WORLDS.length - 1) arrowBtn(VW / 2 + half, ty2 - aw / 2, aw, 1, () => { mapW++; mapSel = WORLDS[mapW].ready ? firstOpenLevel(mapW) : 0; });
+  if (mapW > 0) arrowBtn(VW / 2 - half - aw, ty2 - aw / 2, aw, -1, () => { mapW--; mapSel = 0; });
+  if (mapW < WORLDS.length - 1) arrowBtn(VW / 2 + half, ty2 - aw / 2, aw, 1, () => { mapW++; mapSel = 0; });
   const lsz = Math.round(Math.min(21 * U, VH * 0.042)), ly2 = ty2 + tsz * 0.5 + lsz * 0.9;
   if (w.ready) outlineText(w.levels[mapSel].name, VW / 2, ly2, lsz, '#FFF3E0', '700 ' + lsz + 'px ' + FB);
   const sy = ly2 + lsz * 0.6 + Math.max(14 * U, 13);
@@ -5767,7 +5767,7 @@ function renderMap() {
     else flatText('Locked', x, y + 26 * U, Math.round(12 * U), 'rgba(255,243,224,.8)', 'center', '700 ' + FB);
     BTN.push({ x: bx - 8, y: y - 60 * U, w: bw2 + 16, h: cardTop - y + 60 * U, fn: () => { if (!open) return; if (mapSel === i) startLevel(mapW, i); else mapSel = i; } });
   });
-  if (unlocked(mapW, 0) && !unlocked(mapW, mapSel)) mapSel = firstOpenLevel(mapW);
+  if (unlocked(mapW, 0) && !unlocked(mapW, mapSel)) mapSel = 0;
   if (!unlocked(mapW, 0)) {   // a city you haven't reached yet: no Noodles, just a note
     const prev = WORLDS[mapW - 1], msg = 'Finish ' + (prev ? prev.name : 'the last city') + ' to fly here';
     const fsz = Math.round(18 * U); ctx.font = '800 ' + fsz + 'px ' + FB; const mw = ctx.measureText(msg).width + 40 * U, mh = 44 * U;
@@ -5815,7 +5815,7 @@ function mapStep(dir) {
   const w = WORLDS[mapW];
   if (!mapCanStep(dir)) return;
   if (dir > 0) { if (w.ready && mapSel < w.levels.length - 1 && unlocked(mapW, mapSel + 1)) mapSel++; else { mapW++; mapSel = 0; } }
-  else { if (w.ready && mapSel > 0) mapSel--; else { mapW--; const pw = WORLDS[mapW]; mapSel = 0; if (pw.ready) for (let i = 0; i < pw.levels.length; i++) if (unlocked(mapW, i)) mapSel = i; } }
+  else { if (w.ready && mapSel > 0) mapSel--; else { mapW--; mapSel = 0; } }
 }
 function outlineText(s2, x, y, size, col, font) {
   ctx.font = font; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.lineJoin = 'round';
