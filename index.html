@@ -44,7 +44,7 @@ canvas{position:fixed;left:0;top:0;display:block;touch-action:none}
 <script>
 'use strict';
 // ================= CORE: constants, physics, level data =================
-const VERSION = 42;
+const VERSION = 44;
 const T = 32;          // tile size in world units
 const LH = 16;         // level height in tiles
 const clamp = (v, a, b) => v < a ? a : (v > b ? b : v);
@@ -5711,32 +5711,45 @@ function renderMap() {
   const th = THEMES[WORLDS[mapW].theme !== undefined ? WORLDS[mapW].theme : 8];
   drawBackground(th, mapW * 400 + T0 * 0.2, 0, 0, T0, false);  // th comes from the city's theme
   ctx.fillStyle = 'rgba(27,20,40,' + (w.ready ? 0.12 : 0.5) + ')'; ctx.fillRect(0, 0, VW, VH);
-  const top = SAFE.t + 22;
-  flatPill(SAFE.l + 16, top, 92 * U, 40 * U, 'Home', () => { S = 'title'; }, { bg: 'rgba(255,246,234,.9)', fg: '#2E2140', size: Math.round(16 * U) });
-  const after = soundButtons(VW - SAFE.r - 16, top + 20 * U, 18 * U);
-  flatPill(after - 8 * U - 124 * U, top, 124 * U, 40 * U, 'Nap Sack', () => { S = 'album'; mapFromAlbum = true; albumCity = WORLDS[mapW].ready ? mapW : 0; }, { bg: 'rgba(255,246,234,.9)', fg: '#2E2140', size: Math.round(16 * U) });
-  // world name, with a small switcher underneath
-  const cy = top + 20 * U, ty2 = cy + 52 * U;
-  ctx.font = '700 ' + Math.round(Math.min(48 * U, VH * 0.07)) + 'px ' + FT; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-  ctx.fillStyle = 'rgba(27,20,40,.35)'; ctx.fillText(w.name, VW / 2 + 2, ty2 + 3); ctx.fillStyle = '#FFF3E0'; ctx.fillText(w.name, VW / 2, ty2);
-  const sy = ty2 + Math.min(48 * U, VH * 0.07) * 0.5 + 22 * U, aw = 30 * U;
-  const wl = 'Stop ' + w.n + ' of ' + WORLDS.length + (w.ready && pr ? '   ·   ★ ' + w.levels.reduce((n, l) => n + starsFor(levelRec(l.id)), 0) + ' of ' + w.levels.length * 3 : '');
-  if (TEST_UNLOCK) flatText('TEST MODE: every level unlocked', VW / 2, sy + 26 * U, Math.round(12 * U), COL.sun, 'center', '800 ' + FB);
-  flatText(wl, VW / 2, sy, Math.round(14 * U), '#FFF3E0', 'center', '800 ' + FB);
-  ctx.font = '800 ' + Math.round(14 * U) + 'px ' + FB; const half = ctx.measureText(wl).width / 2 + 14 * U;
-  if (mapW > 0) arrowBtn(VW / 2 - half - aw, sy - aw / 2, aw, -1, () => { mapW--; mapSel = WORLDS[mapW].ready ? firstOpenLevel(mapW) : 0; });
-  if (mapW < WORLDS.length - 1) arrowBtn(VW / 2 + half, sy - aw / 2, aw, 1, () => { mapW++; mapSel = WORLDS[mapW].ready ? firstOpenLevel(mapW) : 0; });
+  const top = SAFE.t + 22, ir = 18 * U;
+  mapIconBtn(SAFE.l + 16 + ir, top + 20 * U, ir, 'home', () => { S = 'title'; });
+  const after = soundButtons(VW - SAFE.r - 16, top + 20 * U, ir);
+  mapIconBtn(after - 8 * U - ir, top + 20 * U, ir, 'bag', () => { S = 'album'; mapFromAlbum = true; albumCity = WORLDS[mapW].ready ? mapW : 0; });
+  // city name big and high, the chosen stop's name small underneath, then progress as symbols
+  const tsz = Math.round(Math.min(58 * U, VH * 0.095)), ty2 = top + 20 * U;
+  outlineText(w.name, VW / 2, ty2, tsz, '#FFF3E0', '700 ' + tsz + 'px ' + FT);
+  ctx.font = '700 ' + tsz + 'px ' + FT; const half = ctx.measureText(w.name).width / 2 + 16 * U, aw = 30 * U;
+  if (mapW > 0) arrowBtn(VW / 2 - half - aw, ty2 - aw / 2, aw, -1, () => { mapW--; mapSel = WORLDS[mapW].ready ? firstOpenLevel(mapW) : 0; });
+  if (mapW < WORLDS.length - 1) arrowBtn(VW / 2 + half, ty2 - aw / 2, aw, 1, () => { mapW++; mapSel = WORLDS[mapW].ready ? firstOpenLevel(mapW) : 0; });
+  const lsz = Math.round(Math.min(21 * U, VH * 0.042)), ly2 = ty2 + tsz * 0.5 + lsz * 0.9;
+  if (w.ready) outlineText(w.levels[mapSel].name, VW / 2, ly2, lsz, '#FFF3E0', '700 ' + lsz + 'px ' + FB);
+  const sy = ly2 + lsz * 0.6 + Math.max(14 * U, 13);
+  { // one dot per stop on the trip (gold = here), then the city's stars
+    const nW = WORLDS.length, dg = 15 * U, dr = 4.2 * U;
+    const stxt = w.ready && pr ? '★ ' + w.levels.reduce((n, l) => n + starsFor(levelRec(l.id)), 0) + ' / ' + w.levels.length * 3 : '';
+    const ssz = Math.round(13.5 * U); ctx.font = '800 ' + ssz + 'px ' + FB; const sw = stxt ? ctx.measureText(stxt).width + 24 * U : 0;
+    const totW = (nW - 1) * dg + sw, dx0 = VW / 2 - totW / 2;
+    rr(dx0 - 14 * U, sy - 12 * U, totW + 28 * U, 24 * U, 12 * U); ctx.fillStyle = 'rgba(27,20,40,.38)'; ctx.fill();
+    for (let i = 0; i < nW; i++) {
+      const x = dx0 + i * dg;
+      if (i === mapW) { ci(x, sy, dr + 2.2 * U); ctx.fillStyle = COL.sun; ctx.fill(); }
+      else if (i < mapW) { ci(x, sy, dr); ctx.fillStyle = '#FFF3E0'; ctx.fill(); }
+      else { ci(x, sy, dr - 0.6 * U); ctx.lineWidth = 1.6 * U; ctx.strokeStyle = 'rgba(255,243,224,.75)'; ctx.stroke(); }
+    }
+    if (stxt) flatText(stxt, dx0 + (nW - 1) * dg + 14 * U, sy + 1, ssz, COL.sun, 'left', '800 ' + FB);
+  }
+  if (TEST_UNLOCK) flatText('TEST MODE', SAFE.l + 14, VH - SAFE.b - 12, Math.round(11 * U), COL.sun, 'left', '800 ' + FB);
   if (!w.ready) {
 
     flatText('Coming soon', VW / 2, VH * 0.82, Math.round(26 * U), COL.sun, 'center', '800 ' + FB);
     return;
   }
   // each stop is a rooftop, with Noodles' jump arcs between them
-  const cardTop = VH - SAFE.b - 92 * U - 16, n = w.levels.length;
+  const cardTop = VH + 10, n = w.levels.length;
   const x0 = SAFE.l + 70 * U, x1 = VW - SAFE.r - 70 * U, span = (x1 - x0) / n, bw2 = Math.min(span * 0.62, 120 * U);
-  const avail = cardTop - (sy + 40 * U);
+  const avail = cardTop - SAFE.b - (sy + 108 * U);
   const heights = [0.42, 0.62, 0.5, 0.7, 0.85];
-  const roofs = w.levels.map((_, i) => ({ x: x0 + span * (i + 0.5), y: cardTop - avail * heights[i % heights.length] }));
+  const roofs = w.levels.map((_, i) => ({ x: x0 + span * (i + 0.5), y: cardTop - SAFE.b - 30 * U - (avail - 30 * U) * heights[i % heights.length] }));
   ctx.setLineDash([6, 8]); ctx.lineWidth = 3 * U;
   for (let i = 0; i < n - 1; i++) {
     const a1 = roofs[i], b1 = roofs[i + 1], peak = Math.min(a1.y, b1.y) - 46 * U;
@@ -5749,14 +5762,6 @@ function renderMap() {
     const bx = x - bw2 / 2, body = open ? (sel ? '#5A3A78' : '#4B2F63') : '#2E1E40';
     if (sel) { ctx.save(); ctx.globalAlpha = 0.35 + Math.sin(T0 * 0.05) * 0.08; const gr = ctx.createLinearGradient(0, y - 220 * U, 0, y); gr.addColorStop(0, 'rgba(255,236,160,0)'); gr.addColorStop(1, '#FFE680'); ctx.fillStyle = gr; ctx.beginPath(); ctx.moveTo(x - bw2 * 0.2, y - 220 * U); ctx.lineTo(x + bw2 * 0.9, y - 220 * U); ctx.lineTo(x + bw2 * 0.55, y); ctx.lineTo(x - bw2 * 0.55, y); ctx.closePath(); ctx.fill(); ctx.restore(); }
     drawMapStop(th, lv, i, x, y, bw2, cardTop, open);
-    { // the stop's name, on a little sign under its stars
-      const fsz = Math.round(clamp(12 * U, 11, 17)), maxW = bw2 + 18 * U; ctx.font = '800 ' + fsz + 'px ' + FB;
-      const words = lv.name.split(' '), lines = []; let cur = '';
-      for (const wd of words) { const tr = cur ? cur + ' ' + wd : wd; if (ctx.measureText(tr).width > maxW - 14 * U && cur) { lines.push(cur); cur = wd; } else cur = tr; } if (cur) lines.push(cur);
-      const lw2 = Math.max(...lines.map(l => ctx.measureText(l).width)) + 18 * U, lh2 = fsz * 1.2, ph = lines.length * lh2 + 10 * U, py2 = y + 44 * U;
-      rr(x - lw2 / 2, py2, lw2, ph, 9 * U); ctx.fillStyle = i === mapSel ? 'rgba(255,246,234,.97)' : 'rgba(255,246,234,.85)'; ctx.fill();
-      lines.forEach((l, li) => flatText(l, x, py2 + 5 * U + lh2 * (li + 0.5), fsz, '#2E2140', 'center', '800 ' + FB));
-    }
     if (open) { for (let k = 0; k < 3; k++) { starPath(x - 16 * U + k * 16 * U, y + 26 * U, 6.5 * U, 3 * U); ctx.fillStyle = k < starsFor(rec) ? COL.sun : 'rgba(255,243,224,.3)'; ctx.fill(); } }
     else flatText('Locked', x, y + 26 * U, Math.round(12 * U), 'rgba(255,243,224,.8)', 'center', '700 ' + FB);
     BTN.push({ x: bx - 8, y: y - 60 * U, w: bw2 + 16, h: cardTop - y + 60 * U, fn: () => { if (!open) return; if (mapSel === i) startLevel(mapW, i); else mapSel = i; } });
@@ -5765,18 +5770,30 @@ function renderMap() {
   const dozing = T0 - (window.lastInputT || 0) > 300;
   drawNoodle(hx, hy + (dozing ? 2 * U : Math.abs(Math.sin(T0 * 0.12)) * -4), { face: 1, t: T0, anim: dozing ? 'nap' : 'idle', s: 0.85 * U });
   if (dozing) for (let i = 0; i < 3; i++) { const kz = ((T0 * 0.4 + i * 33) % 100) / 100; ctx.save(); ctx.globalAlpha = 1 - kz; flatText('z', hx + 16 * U + kz * 14 * U, hy - 20 * U - kz * 24 * U, Math.round((10 + i * 3) * U), '#FFF3E0', 'center', '800 ' + FB); ctx.restore(); }
-  // the card for the chosen level
-  const lv = w.levels[mapSel], rec = levelRec(lv.id);
-  const cw = Math.min(600 * U, VW - SAFE.l - SAFE.r - 40), ch = 92 * U, cx0 = VW / 2 - cw / 2, cy0 = VH - SAFE.b - ch - 16;
-  rr(cx0, cy0, cw, ch, 18); ctx.fillStyle = 'rgba(255,246,234,.95)'; ctx.fill();
-  ctx.font = '700 ' + Math.round(22 * U) + 'px ' + FT; ctx.fillStyle = '#2E2140'; ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
-  ctx.fillText(lv.name, cx0 + 20, cy0 + 26 * U);
-  const trs = ALBUM[lv.id] || [], tk = rec ? rec.tokens : [false, false, false];
-  for (let k = 0; k < 3; k++) { const fx = cx0 + 34 + k * 30 * U; ci(fx, cy0 + 60 * U, 12 * U); ctx.fillStyle = tk[k] ? '#FFE680' : 'rgba(46,33,64,.1)'; ctx.fill(); if (trs[k]) drawAlbumIcon(trs[k].id, fx, cy0 + 60 * U, 0.52 * U, !tk[k]); }
-  const best = rec && rec.best !== null ? 'Best time ' + Math.floor(rec.best / 60) + ':' + String(Math.floor(rec.best % 60)).padStart(2, '0') : 'Not played yet';
-  ctx.font = '600 ' + Math.round(14 * U) + 'px ' + FB; ctx.fillStyle = '#4A3150'; ctx.fillText(best, cx0 + 34 + 92 * U, cy0 + 60 * U);
-  ctx.fillStyle = '#6B4560'; ctx.font = '600 ' + Math.round(12 * U) + 'px ' + FB; ctx.fillText('Stars: finish · find all 3 · be speedy', cx0 + 20, cy0 + ch - 10 * U);
-  if (unlocked(mapW, mapSel)) flatPill(cx0 + cw - 140 * U, cy0 + 18 * U, 122 * U, 54 * U, 'Play', () => startLevel(mapW, mapSel), { size: Math.round(22 * U) });
+  // a little "Play" speech bubble over Noodles (tap it, or tap the chosen roof again)
+  if (unlocked(mapW, mapSel)) {
+    const bsz = Math.round(18 * U), pw = 104 * U, ph = 40 * U, bob = Math.sin(T0 * 0.07) * 2 * U;
+    const px = clamp(hx - pw / 2, SAFE.l + 8, VW - SAFE.r - 8 - pw), py = hy - 58 * U - ph + bob;
+    ctx.fillStyle = '#2E2140'; rr(px, py, pw, ph, ph / 2); ctx.fill();
+    ctx.beginPath(); ctx.moveTo(hx - 8 * U, py + ph - 1); ctx.lineTo(hx, py + ph + 10 * U); ctx.lineTo(hx + 8 * U, py + ph - 1); ctx.closePath(); ctx.fill();
+    const tx = px + 24 * U, tyy = py + ph / 2; ctx.fillStyle = COL.sun; ctx.beginPath(); ctx.moveTo(tx - 6 * U, tyy - 8 * U); ctx.lineTo(tx + 8 * U, tyy); ctx.lineTo(tx - 6 * U, tyy + 8 * U); ctx.closePath(); ctx.fill();
+    flatText('Play', px + pw / 2 + 12 * U, tyy + 1, bsz, '#FFF3E0', 'center', '800 ' + FB);
+    BTN.unshift({ x: px - 6, y: py - 6, w: pw + 12, h: ph + 18 * U, fn: () => startLevel(mapW, mapSel) });
+  }
+}
+function outlineText(s2, x, y, size, col, font) {
+  ctx.font = font; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.lineJoin = 'round';
+  ctx.fillStyle = 'rgba(27,20,40,.3)'; ctx.fillText(s2, x + 1, y + Math.max(2, size * 0.06));
+  ctx.lineWidth = Math.max(3, size * 0.14); ctx.strokeStyle = '#3A2442'; ctx.strokeText(s2, x, y);
+  ctx.fillStyle = col; ctx.fillText(s2, x, y);
+}
+function mapIconBtn(x, cy, r, kind, fn) {
+  ci(x, cy, r); ctx.fillStyle = 'rgba(27,20,40,.35)'; ctx.fill(); ctx.lineWidth = 2; ctx.strokeStyle = 'rgba(255,243,224,.8)'; ctx.stroke();
+  ctx.save(); ctx.translate(x, cy); const k = r / 18; ctx.scale(k, k); ctx.strokeStyle = '#FFF3E0'; ctx.fillStyle = '#FFF3E0'; ctx.lineWidth = 2.2; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+  if (kind === 'home') { ctx.beginPath(); ctx.moveTo(-9, 0); ctx.lineTo(0, -8); ctx.lineTo(9, 0); ctx.moveTo(-6, -2); ctx.lineTo(-6, 8); ctx.lineTo(6, 8); ctx.lineTo(6, -2); ctx.stroke(); ctx.fillRect(-1.6, 3, 3.2, 5); }
+  else { rr(-8, -3, 16, 12, 3); ctx.stroke(); ctx.beginPath(); ctx.moveTo(-4, -3); ctx.quadraticCurveTo(-4, -9, 0, -9); ctx.quadraticCurveTo(4, -9, 4, -3); ctx.stroke(); ctx.beginPath(); ctx.moveTo(-8, 2); ctx.lineTo(8, 2); ctx.stroke(); }
+  ctx.restore();
+  BTN.push({ x: x - r - 4, y: cy - r - 4, w: r * 2 + 8, h: r * 2 + 8, fn });
 }
 function arrowBtn(x, y, s2, dir, fn) {
   ci(x + s2 / 2, y + s2 / 2, s2 / 2); ctx.fillStyle = 'rgba(255,246,234,.9)'; ctx.fill();
@@ -5941,6 +5958,8 @@ function drawPartyRoom(room, L, t) {
   else { ctx.shadowColor = th.neon; ctx.shadowBlur = 16 + Math.sin(t * 0.2) * 4; rr(nx - sw2 / 2, ny - 20, sw2, 40, 12); ctx.fillStyle = '#1A1230'; ctx.fill(); ctx.lineWidth = 3; ctx.strokeStyle = th.neon; ctx.stroke(); ctx.fillStyle = th.signFg; }
   ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(th.sign, nx, ny + 1); ctx.shadowBlur = 0;
   if (room.jackpot) { rr(nx - 52, ny + 24, 104, 22, 11); ctx.fillStyle = '#F2B530'; ctx.fill(); ctx.fillStyle = '#2A2238'; ctx.font = '800 12px ' + FB; ctx.fillText('JACKPOT!', nx, ny + 35.5); }
+  // the way back out: draw the exit door over the wall
+  for (const d of L.deco) if (d.k === 'exit' && d.x >= room.x0 && d.x < room.x1) drawDeco(d, t);
   // a little sparkle in the air, in every room
   for (let i = 0; i < 16; i++) { const sx = x0 + ((i * 97 + t * 0.5) % w), sy = top + 60 + ((i * 53 + t * 0.35) % (H - 80)); ctx.globalAlpha = 0.35 + 0.35 * Math.sin(t * 0.1 + i); starPath(sx, sy, 3.5, 1.5); ctx.fillStyle = '#FFF4D0'; ctx.fill(); }
   ctx.restore();
