@@ -44,7 +44,7 @@ canvas{position:fixed;left:0;top:0;display:block;touch-action:none}
 <script>
 'use strict';
 // ================= CORE: constants, physics, level data =================
-const VERSION = 46;
+const VERSION = 47;
 const T = 32;          // tile size in world units
 const LH = 16;         // level height in tiles
 const clamp = (v, a, b) => v < a ? a : (v > b ? b : v);
@@ -5747,7 +5747,7 @@ function renderMap() {
   }
   // each stop is a rooftop, with Noodles' jump arcs between them
   const cardTop = VH + 10, n = w.levels.length;
-  const cl = ctrlLayout(), x0 = Math.max(SAFE.l + 70 * U, cl.rx + cl.bs / 2 + 4), x1 = VW - SAFE.r - 40 * U, span = (x1 - x0) / n, bw2 = Math.min(span * 0.62, 120 * U);
+  const x0 = SAFE.l + 70 * U, x1 = VW - SAFE.r - 70 * U, span = (x1 - x0) / n, bw2 = Math.min(span * 0.62, 120 * U);
   const avail = cardTop - SAFE.b - (sy + 108 * U);
   const heights = [0.42, 0.62, 0.5, 0.7, 0.85];
   const roofs = w.levels.map((_, i) => ({ x: x0 + span * (i + 0.5), y: cardTop - SAFE.b - 30 * U - (avail - 30 * U) * heights[i % heights.length] }));
@@ -5788,8 +5788,8 @@ function mapStepButtons() {   // rooftop arrows: same size and spot as the in-ga
   const w = WORLDS[mapW]; if (!w.ready) return;
   const c = ctrlLayout(), canL = mapSel > 0, canR = mapSel < w.levels.length - 1 && unlocked(mapW, mapSel + 1);
   const one = (x, dir, on, fn) => {
-    ctx.save(); ctx.globalAlpha = on ? 1 : 0.35;
-    ci(x, c.by, c.bs / 2); ctx.fillStyle = 'rgba(27,20,40,.3)'; ctx.fill(); ctx.lineWidth = 2.5; ctx.strokeStyle = 'rgba(255,243,224,.85)'; ctx.stroke();
+    ctx.save(); ctx.globalAlpha = on ? 0.85 : 0.3;
+    ci(x, c.by, c.bs / 2); ctx.fillStyle = 'rgba(27,20,40,.22)'; ctx.fill(); ctx.lineWidth = 2.5; ctx.strokeStyle = 'rgba(255,243,224,.85)'; ctx.stroke();
     ctx.beginPath(); ctx.moveTo(x - dir * c.bs * 0.1, c.by - c.bs * 0.17); ctx.lineTo(x + dir * c.bs * 0.14, c.by); ctx.lineTo(x - dir * c.bs * 0.1, c.by + c.bs * 0.17); ctx.closePath(); ctx.fillStyle = '#FFF3E0'; ctx.fill();
     ctx.restore();
     BTN.unshift({ x: x - c.bs / 2, y: c.by - c.bs / 2, w: c.bs, h: c.bs, fn: () => { if (on) fn(); } });
