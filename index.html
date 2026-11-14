@@ -44,7 +44,7 @@ canvas{position:fixed;left:0;top:0;display:block;touch-action:none}
 <script>
 'use strict';
 // ================= CORE: constants, physics, level data =================
-const VERSION = 44;
+const VERSION = 45;
 const T = 32;          // tile size in world units
 const LH = 16;         // level height in tiles
 const clamp = (v, a, b) => v < a ? a : (v > b ? b : v);
@@ -1327,7 +1327,7 @@ function b61() {
   trail(L, [[110, 6], [111, 7], [112, 7], [113, 7], [114, 6]]);
   ground(L, 114, 151, 3);
   tile(L, 118, 7, '?'); tile(L, 119, 7, 'M'); tile(L, 120, 7, '?');
-  crowd(L, [124, 136], 3); pigeon(L, 130, 3);
+  crowd(L, [124, 136], 3); pigeon(L, 137, 3);
   for (let i = 0; i < 4; i++) { fill(L, 128 + i, 128 + i, 4, 4 + i); coin(L, 128 + i, 5 + i); }
   fill(L, 132, 133, 4, 7);
   goal(L, 142, 3);
@@ -3934,8 +3934,8 @@ function ctrlLayout() {
   const bs = clamp(Math.min(VH * 0.16, VW * 0.085), 70, 104);   // arrows (and yarn); width-led so browser bars don't shrink them
   const js = bs * 1.22;                                          // jump
   const edge = 18, bottom = 8 + SAFE.b * 0.3;
-  const by = VH - bottom - bs / 2;
-  const lx = SAFE.l + edge + bs / 2, rx = lx + bs * 1.22;
+  const by = VH - 3 - SAFE.b * 0.2 - bs / 2;                      // arrows hug the bottom-left corner, close together
+  const lx = SAFE.l + 8 + bs / 2, rx = lx + bs * 1.05;
   const jx = VW - SAFE.r - edge - js / 2, jy = VH - bottom - js / 2;
   const as = bs, ax = jx - js / 2 - 18 - as / 2, ay = by;
   return { bs, js, by, lx, rx, jx, jy, ax, ay, as, split: (lx + rx) / 2, moveMaxX: VW * 0.45, actMinX: VW * 0.55, topY: VH * 0.18 };
@@ -4023,8 +4023,8 @@ function onKeyPress(code) {
   if (S === 'map') {
     const w = WORLDS[mapW];
     if (code === 'Escape') { S = 'title'; return; }
-    if (code === 'ArrowRight') { if (w.ready && mapSel < w.levels.length - 1 && unlocked(mapW, mapSel + 1)) mapSel++; else if (mapW < WORLDS.length - 1) { mapW++; mapSel = 0; } }
-    if (code === 'ArrowLeft') { if (w.ready && mapSel > 0) mapSel--; else if (mapW > 0) { mapW--; mapSel = Math.max(0, WORLDS[mapW].levels.length - 1); } }
+    if (code === 'ArrowRight') mapStep(1);
+    if (code === 'ArrowLeft') mapStep(-1);
     if (enter || code === 'Space') { if (w.ready && unlocked(mapW, mapSel)) startLevel(mapW, mapSel); }
     return;
   }
@@ -4637,10 +4637,11 @@ function updatePlay() {
   }
   g.rainFish = g.rainFish.filter(f => !f.got);
   updateEnemies(); updateSquirts(); updateNpcs(); updateItems(); updatePowers(); updateYarn(); updateDrone(); updateBoss(); updateLids();
-  for (const f of L.flags) if (!f.got && rectHit(p, f)) {
+  const pRoom = roomFor(p.x + p.w / 2), past = o => p.x + p.w / 2 > o.x + o.w / 2 && !pRoom.secret && roomFor(o.x + o.w / 2) === pRoom;
+  for (const f of L.flags) if (!f.got && !g.dying && (rectHit(p, f) || past(f))) {   // jumping over a checkpoint still counts
     f.got = true; g.check = { tx: f.tx, s: f.s }; SFX.flag(); popWord(f.x + 12, f.y - 8, 'Checkpoint!', COL.mint, 16); burst(f.x + 12, f.y + 10, 14, [COL.mint, COL.white], 3, 'star');
   }
-  if (L.goal && rectHit(p, L.goal) && !g.dying && !(g.arenaOn && !g.won)) levelClear();
+  if (L.goal && (rectHit(p, L.goal) || past(L.goal)) && !g.dying && !(g.arenaOn && !g.won)) levelClear();
   updateFx(); updateCam();
 }
 function updateEnemies() {
@@ -5738,10 +5739,11 @@ function renderMap() {
     }
     if (stxt) flatText(stxt, dx0 + (nW - 1) * dg + 14 * U, sy + 1, ssz, COL.sun, 'left', '800 ' + FB);
   }
-  if (TEST_UNLOCK) flatText('TEST MODE', SAFE.l + 14, VH - SAFE.b - 12, Math.round(11 * U), COL.sun, 'left', '800 ' + FB);
+  if (TEST_UNLOCK) flatText('TEST MODE', VW / 2, VH - SAFE.b - 10, Math.round(11 * U), COL.sun, 'center', '800 ' + FB);
   if (!w.ready) {
 
     flatText('Coming soon', VW / 2, VH * 0.82, Math.round(26 * U), COL.sun, 'center', '800 ' + FB);
+    mapStepButtons();
     return;
   }
   // each stop is a rooftop, with Noodles' jump arcs between them
@@ -5770,6 +5772,7 @@ function renderMap() {
   const dozing = T0 - (window.lastInputT || 0) > 300;
   drawNoodle(hx, hy + (dozing ? 2 * U : Math.abs(Math.sin(T0 * 0.12)) * -4), { face: 1, t: T0, anim: dozing ? 'nap' : 'idle', s: 0.85 * U });
   if (dozing) for (let i = 0; i < 3; i++) { const kz = ((T0 * 0.4 + i * 33) % 100) / 100; ctx.save(); ctx.globalAlpha = 1 - kz; flatText('z', hx + 16 * U + kz * 14 * U, hy - 20 * U - kz * 24 * U, Math.round((10 + i * 3) * U), '#FFF3E0', 'center', '800 ' + FB); ctx.restore(); }
+  mapStepButtons();
   // a little "Play" speech bubble over Noodles (tap it, or tap the chosen roof again)
   if (unlocked(mapW, mapSel)) {
     const bsz = Math.round(18 * U), pw = 104 * U, ph = 40 * U, bob = Math.sin(T0 * 0.07) * 2 * U;
@@ -5780,6 +5783,23 @@ function renderMap() {
     flatText('Play', px + pw / 2 + 12 * U, tyy + 1, bsz, '#FFF3E0', 'center', '800 ' + FB);
     BTN.unshift({ x: px - 6, y: py - 6, w: pw + 12, h: ph + 18 * U, fn: () => startLevel(mapW, mapSel) });
   }
+}
+// step to the next / previous stop on the map, rolling into the next or previous city at the ends
+function mapStepButtons() {   // big arrows in the bottom corners to walk through the stops (tapping a roof works too)
+  const sz = Math.max(48, 54 * U), y = VH - SAFE.b - 14 - sz;
+  if (mapCanStep(-1)) { arrowBtn(SAFE.l + 14, y, sz, -1, () => mapStep(-1)); BTN.unshift(BTN.pop()); }
+  if (mapCanStep(1)) { arrowBtn(VW - SAFE.r - 14 - sz, y, sz, 1, () => mapStep(1)); BTN.unshift(BTN.pop()); }
+}
+function mapCanStep(dir) {
+  const w = WORLDS[mapW];
+  if (dir > 0) return (w.ready && mapSel < w.levels.length - 1 && unlocked(mapW, mapSel + 1)) || (mapW < WORLDS.length - 1 && (!w.ready || mapSel === w.levels.length - 1));
+  return (w.ready && mapSel > 0) || mapW > 0;
+}
+function mapStep(dir) {
+  const w = WORLDS[mapW];
+  if (!mapCanStep(dir)) return;
+  if (dir > 0) { if (w.ready && mapSel < w.levels.length - 1 && unlocked(mapW, mapSel + 1)) mapSel++; else { mapW++; mapSel = 0; } }
+  else { if (w.ready && mapSel > 0) mapSel--; else { mapW--; const pw = WORLDS[mapW]; mapSel = 0; if (pw.ready) for (let i = 0; i < pw.levels.length; i++) if (unlocked(mapW, i)) mapSel = i; } }
 }
 function outlineText(s2, x, y, size, col, font) {
   ctx.font = font; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.lineJoin = 'round';

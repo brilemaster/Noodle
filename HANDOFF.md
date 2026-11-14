@@ -1,12 +1,13 @@
 # Noodle and the Sunbeam Heist — handoff guide
 
-Current version: **v44** (shown bottom-right of the title screen). Check a deploy with `?v=44`.
+Current version: **v45** (shown bottom-right of the title screen). Check a deploy with `?v=45`.
 
 **Test mode:** add `?unlock` (or `&unlock`) to the link, e.g. `https://brilemaster.github.io/Noodles/?v=42&unlock`, to open every built level without saving anything as cleared. The map shows "TEST MODE". Remove it from the link to play normally.
 
 ## Changelog
 - v1: World 1 built.
 - v2: game-feel update (owner asked: keep art, make it feel like a snappy Mario game). New movement physics, animation, juice, power-ups, treasures, flagpole, HUD clarity.
+- v45: (owner feedback) **checkpoints trigger when you pass them**, not only on touch (jumping over one still saves it); same for the goal pole, so you can't skip past the end (`past()` in `updatePlay`, same room only, never in secret rooms). **Move arrows** sit closer together and lower in the bottom-left corner (`ctrlLayout`). **Map step arrows**: big round ◀ ▶ in the bottom corners walk through the stops and roll into the next/previous country at the ends (`mapStep`, `mapCanStep`, `mapStepButtons`; keyboard arrows use the same). TEST MODE tag moved to bottom center. Fixed the Dublin pigeon that spawned inside the stairs and jittered in place (now at x 137). `test/stuck.js` checks every level for walkers stuck in walls.
 - v44: **clean map screen** (owner picked mockup A on the Noodle Menu Ideas canvas). Big outlined city name up top with arrows beside it; the chosen stop's name in smaller text under it; trip progress as a row of dots (filled = cities done, gold = here, hollow = ahead) plus "★ x / 15" in one small pill. Home and Nap Sack are round icon buttons like the sound buttons (`mapIconBtn`). No bottom card and no name signs on the rooftops (roofs keep their 3 stars); a dark "▶ Play" speech bubble bobs over Noodles (tap it, or tap the chosen roof again). Buildings now run to the bottom edge. TEST MODE is a small tag bottom-left. Helpers: `outlineText`, `mapIconBtn`.
 - v43: secret rooms show their **exit door** again (the themed back wall from v41 was painting over it). `drawPartyRoom` now redraws `exit` deco on top of the wall.
 - v42: **every level has its own mood** so levels in a country don't run together (owner). `WEATHER[levelId]` + `drawWeather()`: back layer (sunrays, rolling mist, stars with a shooting star, big clouds) and a light front layer (rain, heavy monsoon rain with a slight dark tint, drizzle, snow, blowing leaves/petals in set colors, wind streaks, fireflies, Songkran spray). Visual only, never changes play; skipped in secret rooms. Kilkenny is now an autumn afternoon (orange sky, falling leaves) and Killarney a misty pink dawn. Seoul's last level has snow at night. New levels should get a `WEATHER` entry that differs from their neighbors.
@@ -131,7 +132,7 @@ Final "city" of the Thailand trip. Noodles roams a pleasant, bustling airport wi
 - **Dialog:** comic panels, typewriter with blip sounds, Skip shows only for scenes already seen (`prof().seen`). Scenes in `SCENES`.
 - **Controls:** round left/right buttons (thumb slides between), big round jump button, round yarn button above it. All fingers up resets everything. All fingers up resets everything. Keyboard: arrows/WASD, Space/Z jump, X throw, 1-3 pouch, Esc pause.
 - **Phone zoom:** `SCALE` from the real visible height (`visualViewport`), ~9 tiles tall on phones up to 15 on big screens; camera follows up and down. Portrait shows a "turn sideways" screen.
-- **Leaderboard:** owner said yes, add later. Not built yet — propose a simple free option and ask before adding.
+- **Leaderboard:** owner said yes, add later. Not built yet — propose a simple free option and ask before adding. Best times per level belong here (owner, v44): the map no longer shows them, so the leaderboard should list each level's fastest times. Best times are already saved per player (`levelRec(id).best`, in seconds).
 
 ## Source layout (for editing)
 The single file is assembled from parts: `core.js` (physics + levels, no DOM), `audio.js`, `draw.js` (all art), `game.js` (screens, gameplay, HUD, input, save). In a new conversation, work directly in `index.html` — the sections are marked `// ===== CORE`, `AUDIO`, `ART`, `GAME`.
