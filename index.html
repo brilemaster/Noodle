@@ -44,7 +44,7 @@ canvas{position:fixed;left:0;top:0;display:block;touch-action:none}
 <script>
 'use strict';
 // ================= CORE: constants, physics, level data =================
-const VERSION = 35;
+const VERSION = 36;
 const T = 32;          // tile size in world units
 const LH = 16;         // level height in tiles
 const clamp = (v, a, b) => v < a ? a : (v > b ? b : v);
@@ -5963,12 +5963,6 @@ function updateNpcs() {
   }
 }
 
-// ---- home screen: a giant Noodles strolls over drifting rooftops, past landmarks from the journey, dreaming of a nap
-const TITLE_HERO = { y: null, vy: 0 };
-function titleRoof(wx) {   // roof height (fraction of screen) for a stretch of rooftop
-  const seg = Math.floor(wx / 170), r = Math.sin(seg * 12.9898 + 4.1) * 43758.5453, f = r - Math.floor(r);
-  return { h: 0.15 + f * 0.09, seg, f };
-}
 function drawLandmark(kind, x, b, k, col) {
   ctx.fillStyle = col; ctx.beginPath();
   if (kind === 'batman') { ctx.fillRect(x, b - 230 * k, 60 * k, 230 * k); ctx.moveTo(x, b - 230 * k); ctx.lineTo(x + 7 * k, b - 290 * k); ctx.lineTo(x + 15 * k, b - 230 * k); ctx.moveTo(x + 45 * k, b - 230 * k); ctx.lineTo(x + 53 * k, b - 290 * k); ctx.lineTo(x + 60 * k, b - 230 * k); }
@@ -5980,53 +5974,115 @@ function drawLandmark(kind, x, b, k, col) {
   else if (kind === 'eiffel') { ctx.moveTo(x - 55 * k, b); ctx.quadraticCurveTo(x - 14 * k, b - 110 * k, x - 4 * k, b - 290 * k); ctx.lineTo(x + 4 * k, b - 290 * k); ctx.quadraticCurveTo(x + 14 * k, b - 110 * k, x + 55 * k, b); ctx.lineTo(x + 32 * k, b); ctx.quadraticCurveTo(x, b - 50 * k, x - 32 * k, b); }
   ctx.fill();
 }
+// ---- home screen: Noodles chases a sunbeam over a tall, bumpy skyline that morphs country to country
+const HS = { blds: [], x: 0, beamX: 0, nap: 0, y: null, vy: 0 };
+const HS_ZONES = [
+  { name: 'Nashville', sky: ['#F9D9B3', '#F4B990', '#C98A8F'], mark: 'batman' },
+  { name: 'Bangkok', sky: ['#FFD8A8', '#FFA870', '#D46A8A'], mark: 'prang' },
+  { name: 'Chiang Mai', sky: ['#D2E6EC', '#F1E2CC', '#D9A8A0'], mark: 'stilt' },
+  { name: 'Phuket', sky: ['#A6DEF2', '#FDE6C8', '#F2B8A0'], mark: 'palm' },
+  { name: 'Seoul', sky: ['#CDE9F6', '#EEF4F2', '#E6C8B8'], mark: 'tower' },
+  { name: 'Ireland', sky: ['#BCD6E8', '#E8EEE6', '#D8C2B6'], mark: 'castle' },
+  { name: 'France', sky: ['#F4DCEA', '#F6C6B4', '#E6A08E'], mark: 'eiffel' },
+];
+const HS_PER = 8;   // buildings per country
+function hsRand(j, n) { const r = Math.sin(j * 127.1 + n * 311.7) * 43758.5453; return r - Math.floor(r); }
+function hsB(i) {
+  while (HS.blds.length <= i) {
+    const j = HS.blds.length, prev = HS.blds[j - 1];
+    const w = 120 + hsRand(j, 1) * 80, x = prev ? prev.x + prev.w + 10 : -300;
+    HS.blds.push({ x, w, top: 0.46 + hsRand(j, 2) * 0.32, zone: Math.floor(j / HS_PER) % HS_ZONES.length, j });
+  }
+  return HS.blds[i];
+}
+function hsAt(wx) { let i = 0; while (hsB(i).x + hsB(i).w + 10 < wx) i++; return i; }
+function hsRoof(wx) { const i = hsAt(wx), b = hsB(i); return wx < b.x ? Math.min(b.top, hsB(Math.max(0, i - 1)).top) : b.top; }
+function mixHex(a, b, f) { const pa = parseInt(a.slice(1), 16), pb = parseInt(b.slice(1), 16); const m = (s) => Math.round(((pa >> s) & 255) * (1 - f) + ((pb >> s) & 255) * f); return 'rgb(' + m(16) + ',' + m(8) + ',' + m(0) + ')'; }
+// one building, dressed for its country (windows are fixed per building, never flicker)
+function drawHsBuilding(b, sx, k) {
+  const top = VH * b.top, w = b.w * k, h = VH - top, j = b.j, z = b.zone;
+  const win = (col, rows, colsN) => { ctx.fillStyle = col; for (let r = 0; r < rows; r++) for (let c = 0; c < colsN; c++) if (hsRand(j * 31 + r, c) < 0.45) ctx.fillRect(sx + 16 * k + c * ((w - 40 * k) / Math.max(1, colsN - 1)), top + 40 * k + r * 52 * k, 16 * k, 22 * k); };
+  const rows = Math.max(1, Math.floor((h - 60 * k) / (52 * k))), colsN = Math.max(2, Math.floor(w / (46 * k)));
+  if (z === 0) { // Nashville: brick, flat parapet, neon blade sign
+    ctx.fillStyle = '#8E4A40'; ctx.fillRect(sx, top, w, h); ctx.fillStyle = '#5A2E28'; ctx.fillRect(sx - 5, top - 10 * k, w + 10, 12 * k); win('#FFD27A', rows, colsN);
+    if (j % 2 === 0) { const nc = ['#FF4FA3', '#4FE3FF', '#FFE14F'][j % 3]; ctx.fillStyle = '#1B1428'; ctx.fillRect(sx + w - 26 * k, top + 28 * k, 16 * k, 90 * k); ctx.fillStyle = nc; ctx.fillRect(sx + w - 22 * k, top + 36 * k, 8 * k, 74 * k); }
+  } else if (z === 1) { // Bangkok: colorful shophouse with a rooftop water tank
+    ctx.fillStyle = ['#3F6A7A', '#7A5A9A', '#B0604A', '#3D7A62'][j % 4]; ctx.fillRect(sx, top, w, h); ctx.fillStyle = '#C9C3CF'; ctx.fillRect(sx - 5, top - 8 * k, w + 10, 10 * k);
+    if (j % 2 === 0) { ctx.fillStyle = '#5A6476'; rr(sx + 14 * k, top - 34 * k, 30 * k, 26 * k, 5); ctx.fill(); } win('#FFE08A', rows, colsN);
+  } else if (z === 2) { // Chiang Mai: teak house with a steep Lanna roof and crossed gable tips
+    ctx.fillStyle = '#8A5A38'; ctx.fillRect(sx, top, w, h); ctx.fillStyle = '#4A3020'; ctx.beginPath(); ctx.moveTo(sx - 12, top + 4); ctx.lineTo(sx + w / 2, top - 44 * k); ctx.lineTo(sx + w + 12, top + 4); ctx.fill();
+    ctx.strokeStyle = '#4A3020'; ctx.lineWidth = 4 * k; ctx.beginPath(); ctx.moveTo(sx + w / 2 - 12 * k, top - 56 * k); ctx.lineTo(sx + w / 2 + 4 * k, top - 38 * k); ctx.moveTo(sx + w / 2 + 12 * k, top - 56 * k); ctx.lineTo(sx + w / 2 - 4 * k, top - 38 * k); ctx.stroke(); win('#FFE3A0', rows, colsN);
+  } else if (z === 3) { // Phuket: pastel shophouse with a scalloped parapet
+    ctx.fillStyle = ['#E7A0B0', '#9FD8C8', '#FFD98A', '#B8B0F0'][j % 4]; ctx.fillRect(sx, top, w, h); ctx.fillStyle = '#2E6A6E'; ctx.fillRect(sx - 5, top - 8 * k, w + 10, 10 * k);
+    for (let i = 0; i < 3; i++) { ctx.beginPath(); ctx.arc(sx + w * (0.2 + i * 0.3), top - 8 * k, 8 * k, Math.PI, 0); ctx.fill(); } win('#FFF1C4', rows, colsN);
+  } else if (z === 4) { // Seoul airport: glass terminal panels, now and then a control tower
+    ctx.fillStyle = '#8AB4D4'; ctx.fillRect(sx, top, w, h); ctx.fillStyle = 'rgba(255,255,255,.35)'; for (let x = sx + 12 * k; x < sx + w; x += 24 * k) ctx.fillRect(x, top, 3 * k, h);
+    ctx.fillStyle = '#E9EEF5'; ctx.fillRect(sx - 5, top - 6 * k, w + 10, 8 * k);
+    if (j % 4 === 1) { ctx.fillStyle = '#5A6E86'; ctx.fillRect(sx + w / 2 - 8 * k, top - 90 * k, 16 * k, 84 * k); ctx.beginPath(); ctx.moveTo(sx + w / 2 - 26 * k, top - 90 * k); ctx.lineTo(sx + w / 2 + 26 * k, top - 90 * k); ctx.lineTo(sx + w / 2 + 18 * k, top - 112 * k); ctx.lineTo(sx + w / 2 - 18 * k, top - 112 * k); ctx.fill(); }
+  } else if (z === 5) { // Ireland: painted terrace, slate roof, chimney pots, Georgian door
+    ctx.fillStyle = ['#C8303A', '#2E7A4A', '#2F6AB0', '#E8B33A', '#7A3E8E', '#4FA0A8'][j % 6]; ctx.fillRect(sx, top, w, h);
+    ctx.fillStyle = '#4A5262'; ctx.beginPath(); ctx.moveTo(sx - 6, top + 2); ctx.lineTo(sx + 10 * k, top - 22 * k); ctx.lineTo(sx + w - 10 * k, top - 22 * k); ctx.lineTo(sx + w + 6, top + 2); ctx.fill();
+    for (let i = 0; i < 3; i++) ctx.fillRect(sx + w - 40 * k + i * 9 * k, top - 36 * k, 7 * k, 14 * k); win('#FFE3A0', rows, colsN);
+  } else { // France: cream stone, zinc mansard with glowing dormers, iron balconies
+    ctx.fillStyle = '#E6D6BC'; ctx.fillRect(sx, top, w, h); ctx.fillStyle = '#6E7A8E'; ctx.beginPath(); ctx.moveTo(sx - 6, top + 4); ctx.lineTo(sx + 10 * k, top - 34 * k); ctx.lineTo(sx + w - 10 * k, top - 34 * k); ctx.lineTo(sx + w + 6, top + 4); ctx.fill();
+    ctx.fillStyle = '#FFE3A0'; ctx.fillRect(sx + w * 0.3, top - 24 * k, 14 * k, 16 * k); ctx.fillRect(sx + w * 0.62, top - 24 * k, 14 * k, 16 * k);
+    ctx.fillStyle = 'rgba(42,34,56,.7)'; for (let y = top + 62 * k; y < VH; y += 52 * k) ctx.fillRect(sx + 8, y, w - 16, 3 * k); win('#FFC86B', rows, colsN);
+  }
+  ctx.fillStyle = 'rgba(0,0,0,.12)'; ctx.fillRect(sx + w - 8 * k, top, 8 * k, h);
+}
 function drawTitleScene() {
-  const t = T0, k = clamp(VH / 820, 0.45, 1.3);
-  const g = ctx.createLinearGradient(0, 0, 0, VH);
-  g.addColorStop(0, '#F9D9B3'); g.addColorStop(0.45, '#F4B990'); g.addColorStop(0.7, '#E8A07E'); g.addColorStop(1, '#C98A8F');
-  ctx.fillStyle = g; ctx.fillRect(0, 0, VW, VH);
-  // drifting clouds
+  const t = T0, k = clamp(VH / 820, 0.45, 1.3), G = VH * 0.0011;
+  const nxs = VW * 0.62, wx = HS.x / k + nxs / k;   // Noodles' position in skyline units
+  if (!HS.beamX) { const bi = hsAt(wx + 700); HS.beamX = hsB(bi).x + hsB(bi).w / 2; }
+  // sky: blend toward the next country as Noodles nears its first building
+  const zi = hsB(hsAt(wx)).zone, zn = (zi + 1) % HS_ZONES.length;
+  const nextStart = hsB((Math.floor(hsAt(wx) / HS_PER) + 1) * HS_PER).x, f = clamp((wx - (nextStart - 500)) / 700, 0, 1);
+  const A = HS_ZONES[zi].sky, B = HS_ZONES[zn].sky, sg = ctx.createLinearGradient(0, 0, 0, VH);
+  sg.addColorStop(0, mixHex(A[0], B[0], f)); sg.addColorStop(0.55, mixHex(A[1], B[1], f)); sg.addColorStop(1, mixHex(A[2], B[2], f));
+  ctx.fillStyle = sg; ctx.fillRect(0, 0, VW, VH);
   ctx.fillStyle = 'rgba(255,255,255,.4)';
-  for (let i = 0; i < 4; i++) { const cx = ((i * 380 - t * (0.2 + i * 0.05)) % (VW + 300) + VW + 300) % (VW + 300) - 150, cy = VH * (0.1 + i * 0.07); el(cx, cy, 60 * k, 13 * k); ctx.fill(); el(cx + 30 * k, cy - 8 * k, 34 * k, 13 * k); ctx.fill(); }
-  // landmarks from the journey drift past: Nashville, Bangkok, Chiang Mai, Phuket, Seoul, Ireland, France…
-  const parade = ['batman', 'prang', 'stilt', 'palm', 'tower', 'castle', 'eiffel'], gap = 330 * k, span = gap * parade.length;
-  const base = VH * 0.86, pOff = t * 0.4;
-  for (let i = -1; i < Math.ceil(VW / gap) + 2; i++) {
-    const wx = Math.floor(pOff / gap) + i, x = wx * gap - pOff + 40 * k;
-    drawLandmark(parade[((wx % parade.length) + parade.length) % parade.length], x, base, k, 'rgba(214,150,150,.55)');
+  for (let i = 0; i < 4; i++) { const cx = ((i * 380 - t * (0.15 + i * 0.04)) % (VW + 300) + VW + 300) % (VW + 300) - 150, cy = VH * (0.08 + i * 0.06); el(cx, cy, 60 * k, 13 * k); ctx.fill(); el(cx + 30 * k, cy - 8 * k, 34 * k, 13 * k); ctx.fill(); }
+  // distant landmarks drift slower (parallax), one per stretch of each country
+  const px = HS.x * 0.35, first = hsAt(px / k - 200);
+  for (let i = first; i < first + 40; i++) { const b = hsB(i); if (b.j % 4 !== 2) continue; const sx = b.x * k - px; if (sx > VW + 200) break; drawLandmark(HS_ZONES[b.zone].mark, sx, VH * 0.86, k, 'rgba(214,150,150,.42)'); }
+  // the rooftops
+  const i0 = hsAt(HS.x / k - 60);
+  for (let i = i0; i < i0 + 30; i++) {
+    const b = hsB(i), sx = b.x * k - HS.x; if (sx > VW + 40) break;
+    drawHsBuilding(b, sx, k);
+    if (b.j % HS_PER === 0) { const gl = ctx.createLinearGradient(sx - 90 * k, 0, sx + 60 * k, 0); gl.addColorStop(0, 'rgba(255,240,215,0)'); gl.addColorStop(0.5, 'rgba(255,240,215,.45)'); gl.addColorStop(1, 'rgba(255,240,215,0)'); ctx.fillStyle = gl; ctx.fillRect(sx - 90 * k, 0, 150 * k, VH); }
   }
-  // the near rooftops, scrolling past Noodles' paws
-  const sp = 2.2, off = t * sp, segW = 170;
-  for (let x0 = -((off % segW) + segW) % segW - segW; x0 < VW + segW; x0 += segW) {
-    const r = titleRoof(off + x0 + 1), top = VH * (1 - r.h);
-    ctx.fillStyle = '#6A4064'; ctx.fillRect(x0, top, segW + 1, VH - top);
-    ctx.fillStyle = '#7E4E74'; ctx.fillRect(x0, top, segW + 1, 6 * k);
-    ctx.fillStyle = '#5A3454'; if (r.f > 0.3) { ctx.fillRect(x0 + 30 + r.f * 60, top - 26 * k, 18 * k, 26 * k); ctx.fillRect(x0 + 26 + r.f * 60, top - 30 * k, 26 * k, 6 * k); }
-    if (r.f < 0.4) { ctx.fillRect(x0 + 120, top - 40 * k, 3, 40 * k); ctx.fillRect(x0 + 110, top - 36 * k, 22, 3); }
-    ctx.fillStyle = 'rgba(255,214,140,.55)'; for (let wy = top + 24 * k; wy < VH - 10; wy += 30 * k) for (let wx = x0 + 18; wx < x0 + segW - 22; wx += 34) if (((wx + wy + r.seg * 7) | 0) % 3 === 0) ctx.fillRect(wx, wy, 12 * k, 14 * k);
-  }
-  // giant Noodles strolls along, easing up and down with the roofline
-  const ns = clamp(VH / 150, 2.2, 6), nx = VW * 0.68, ground = VH * (1 - titleRoof(off + nx).h);
-  const H = TITLE_HERO; if (H.y === null) H.y = ground;
-  const prevY = H.y; H.y += (ground - H.y) * 0.12; const rising = H.y < prevY - 0.6;
-  drawNoodle(nx, H.y, { face: 1, t, anim: rising ? 'jump' : 'run', s: ns, legPhase: t * 0.22 });
-  // thought bubble above his head: dreaming of the perfect nap in a sunbeam
-  const br = Math.min(VW * 0.15, VH * 0.17), headY = H.y - 34 * ns;
-  const bx = Math.min(nx + 4 * ns, VW - SAFE.r - br * 1.05), by = Math.max(SAFE.t + br * 0.8 + 8, headY - br * 1.45) + Math.sin(t * 0.03) * 4;
-  for (let i = 0; i < 3; i++) { const f = (i + 1) / 4; ci(nx + 6 * ns + (bx - nx - 6 * ns) * f, headY - 6 * ns + (by + br * 0.7 - headY + 6 * ns) * f, (4 + i * 4) * k * 1.4); ctx.fillStyle = 'rgba(255,250,240,.95)'; ctx.fill(); ctx.lineWidth = 2.5; ctx.strokeStyle = 'rgba(46,33,64,.5)'; ctx.stroke(); }
-  ctx.save();
-  ctx.beginPath(); for (let i = 0; i < 9; i++) { const a = i / 9 * Math.PI * 2; ctx.moveTo(bx + Math.cos(a) * br * 0.86 + br * 0.3, by + Math.sin(a) * br * 0.62); ctx.arc(bx + Math.cos(a) * br * 0.86, by + Math.sin(a) * br * 0.62, br * 0.3, 0, Math.PI * 2); }
-  ctx.ellipse(bx, by, br * 0.95, br * 0.7, 0, 0, Math.PI * 2);
-  ctx.fillStyle = 'rgba(255,250,240,.96)'; ctx.fill(); ctx.lineWidth = 3; ctx.strokeStyle = 'rgba(46,33,64,.35)'; ctx.stroke();
-  ctx.beginPath(); ctx.ellipse(bx, by, br * 0.9, br * 0.66, 0, 0, Math.PI * 2); ctx.clip();
-  const dg = ctx.createLinearGradient(0, by - br, 0, by + br); dg.addColorStop(0, '#FFE9B8'); dg.addColorStop(1, '#F7C99A'); ctx.fillStyle = dg; ctx.fillRect(bx - br, by - br, br * 2, br * 2);
-  ctx.globalAlpha = 0.55 + Math.sin(t * 0.04) * 0.1; const sb = ctx.createLinearGradient(0, by - br, 0, by + br * 0.4); sb.addColorStop(0, 'rgba(255,240,150,0)'); sb.addColorStop(1, '#FFE680');
-  ctx.fillStyle = sb; ctx.beginPath(); ctx.moveTo(bx - br * 0.05, by - br); ctx.lineTo(bx + br * 0.55, by - br); ctx.lineTo(bx + br * 0.4, by + br * 0.36); ctx.lineTo(bx - br * 0.35, by + br * 0.36); ctx.closePath(); ctx.fill(); ctx.globalAlpha = 1;
-  ci(bx + br * 0.62, by - br * 0.36, br * 0.16); ctx.fillStyle = '#FFF4C4'; ctx.fill();
-  el(bx, by + br * 0.36, br * 0.5, br * 0.13); ctx.fillStyle = '#E98AB8'; ctx.fill(); ink(2); ctx.stroke();
-  drawNoodle(bx - br * 0.02, by + br * 0.32, { anim: 'nap', t, s: br / 52, face: 1 });
+  // the sunbeam resting on a roof ahead
+  const bsx = HS.beamX * k - HS.x, btop = VH * hsRoof(HS.beamX), bw = 170 * k;
+  ctx.save(); ctx.globalAlpha = 0.8 + Math.sin(t * 0.05) * 0.12;
+  const bg = ctx.createLinearGradient(0, 0, 0, btop); bg.addColorStop(0, 'rgba(255,240,160,0)'); bg.addColorStop(1, 'rgba(255,230,128,.85)');
+  ctx.fillStyle = bg; ctx.beginPath(); ctx.moveTo(bsx - bw * 0.15, 0); ctx.lineTo(bsx + bw * 0.75, 0); ctx.lineTo(bsx + bw * 0.5, btop); ctx.lineTo(bsx - bw * 0.5, btop); ctx.closePath(); ctx.fill();
+  el(bsx, btop, bw * 0.55, 8 * k); ctx.fillStyle = 'rgba(255,230,128,.55)'; ctx.fill();
+  for (let i = 0; i < 6; i++) { const q = ((t * 0.3 + i * 40) % 200) / 200; ci(bsx - bw * 0.3 + i * bw * 0.12, btop - q * btop * 0.8, 2 * k); ctx.fillStyle = 'rgba(255,248,224,' + (0.8 * Math.sin(q * Math.PI)) + ')'; ctx.fill(); }
   ctx.restore();
-  for (let i = 0; i < 3; i++) { const q = ((t * 0.35 + i * 33) % 100) / 100; ctx.save(); ctx.globalAlpha = (1 - q) * 0.85; txt('z', bx + br * 0.35 + q * br * 0.3, by - br * 0.05 - q * br * 0.6, Math.round((9 + i * 4) * k * 1.4), '#7A5A8C', 'center', FB, 0); ctx.restore(); }
+  // Noodles: run, leap up to higher roofs, drop to lower ones, nap in the beam
+  const ns = clamp(VH / 160, 2, 5.4), ground = VH * hsRoof(wx);
+  if (HS.y === null) HS.y = ground;
+  const onG = HS.y >= ground - 1 && HS.vy >= 0;
+  if (HS.nap > 0) {
+    HS.nap--; HS.y = ground; HS.vy = 0;
+    if (HS.nap === 0) { const bi = hsAt(wx + 600 + hsRand(Math.floor(t), 3) * 700); HS.beamX = hsB(bi).x + hsB(bi).w / 2; }
+  } else {
+    HS.x += 2 * k;
+    if (onG) {
+      HS.y = ground; HS.vy = 0;
+      const ahead = VH * hsRoof(wx + 70);
+      if (ahead < ground - 4) HS.vy = -Math.sqrt(2 * G * (ground - ahead + 30 * k));
+      if (Math.abs(wx - HS.beamX) < 14) HS.nap = 240;
+    } else { HS.vy += G; HS.y += HS.vy; if (HS.y >= ground && HS.vy > 0) { HS.y = ground; HS.vy = 0; } }
+    if (HS.y > ground) { HS.y = ground; HS.vy = 0; }   // never sink into a wall: step up onto it
+  }
+  if (HS.nap > 0) {
+    drawNoodle(nxs, HS.y, { anim: 'nap', t, s: ns, face: 1 });
+    for (let i = 0; i < 3; i++) { const q = ((t * 0.35 + i * 33) % 100) / 100; ctx.save(); ctx.globalAlpha = (1 - q) * 0.85; txt('z', nxs + 24 * ns + q * 16 * ns, HS.y - 30 * ns - q * 24 * ns, Math.round((7 + i * 3) * ns * 0.6), '#7A5A8C', 'center', FB, 0); ctx.restore(); }
+  } else drawNoodle(nxs, HS.y, { face: 1, t, anim: onG ? 'run' : 'jump', s: ns, legPhase: t * 0.22 });
+  // a soft wash behind the title so it always reads, whatever the country
+  const tw = ctx.createLinearGradient(0, 0, VW * 0.52, 0); tw.addColorStop(0, 'rgba(255,246,234,.62)'); tw.addColorStop(0.6, 'rgba(255,246,234,.38)'); tw.addColorStop(1, 'rgba(255,246,234,0)'); ctx.fillStyle = tw; ctx.fillRect(0, 0, VW * 0.52, VH);
 }
 
 // a map stop dressed for its country: Nashville brick and neon, Bangkok shophouses, Lanna stilt houses,
