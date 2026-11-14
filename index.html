@@ -44,7 +44,7 @@ canvas{position:fixed;left:0;top:0;display:block;touch-action:none}
 <script>
 'use strict';
 // ================= CORE: constants, physics, level data =================
-const VERSION = 45;
+const VERSION = 46;
 const T = 32;          // tile size in world units
 const LH = 16;         // level height in tiles
 const clamp = (v, a, b) => v < a ? a : (v > b ? b : v);
@@ -5717,9 +5717,9 @@ function renderMap() {
   const after = soundButtons(VW - SAFE.r - 16, top + 20 * U, ir);
   mapIconBtn(after - 8 * U - ir, top + 20 * U, ir, 'bag', () => { S = 'album'; mapFromAlbum = true; albumCity = WORLDS[mapW].ready ? mapW : 0; });
   // city name big and high, the chosen stop's name small underneath, then progress as symbols
-  const tsz = Math.round(Math.min(58 * U, VH * 0.095)), ty2 = top + 20 * U;
+  const tsz = Math.round(Math.min(64 * U, VH * 0.1)), ty2 = top + 22 * U;
   outlineText(w.name, VW / 2, ty2, tsz, '#FFF3E0', '700 ' + tsz + 'px ' + FT);
-  ctx.font = '700 ' + tsz + 'px ' + FT; const half = ctx.measureText(w.name).width / 2 + 16 * U, aw = 30 * U;
+  ctx.font = '700 ' + tsz + 'px ' + FT; const aw = Math.max(40, 46 * U), half = ctx.measureText(w.name).width / 2 + 18 * U;
   if (mapW > 0) arrowBtn(VW / 2 - half - aw, ty2 - aw / 2, aw, -1, () => { mapW--; mapSel = WORLDS[mapW].ready ? firstOpenLevel(mapW) : 0; });
   if (mapW < WORLDS.length - 1) arrowBtn(VW / 2 + half, ty2 - aw / 2, aw, 1, () => { mapW++; mapSel = WORLDS[mapW].ready ? firstOpenLevel(mapW) : 0; });
   const lsz = Math.round(Math.min(21 * U, VH * 0.042)), ly2 = ty2 + tsz * 0.5 + lsz * 0.9;
@@ -5739,7 +5739,6 @@ function renderMap() {
     }
     if (stxt) flatText(stxt, dx0 + (nW - 1) * dg + 14 * U, sy + 1, ssz, COL.sun, 'left', '800 ' + FB);
   }
-  if (TEST_UNLOCK) flatText('TEST MODE', VW / 2, VH - SAFE.b - 10, Math.round(11 * U), COL.sun, 'center', '800 ' + FB);
   if (!w.ready) {
 
     flatText('Coming soon', VW / 2, VH * 0.82, Math.round(26 * U), COL.sun, 'center', '800 ' + FB);
@@ -5748,7 +5747,7 @@ function renderMap() {
   }
   // each stop is a rooftop, with Noodles' jump arcs between them
   const cardTop = VH + 10, n = w.levels.length;
-  const x0 = SAFE.l + 70 * U, x1 = VW - SAFE.r - 70 * U, span = (x1 - x0) / n, bw2 = Math.min(span * 0.62, 120 * U);
+  const cl = ctrlLayout(), x0 = Math.max(SAFE.l + 70 * U, cl.rx + cl.bs / 2 + 4), x1 = VW - SAFE.r - 40 * U, span = (x1 - x0) / n, bw2 = Math.min(span * 0.62, 120 * U);
   const avail = cardTop - SAFE.b - (sy + 108 * U);
   const heights = [0.42, 0.62, 0.5, 0.7, 0.85];
   const roofs = w.levels.map((_, i) => ({ x: x0 + span * (i + 0.5), y: cardTop - SAFE.b - 30 * U - (avail - 30 * U) * heights[i % heights.length] }));
@@ -5785,10 +5784,18 @@ function renderMap() {
   }
 }
 // step to the next / previous stop on the map, rolling into the next or previous city at the ends
-function mapStepButtons() {   // big arrows in the bottom corners to walk through the stops (tapping a roof works too)
-  const sz = Math.max(48, 54 * U), y = VH - SAFE.b - 14 - sz;
-  if (mapCanStep(-1)) { arrowBtn(SAFE.l + 14, y, sz, -1, () => mapStep(-1)); BTN.unshift(BTN.pop()); }
-  if (mapCanStep(1)) { arrowBtn(VW - SAFE.r - 14 - sz, y, sz, 1, () => mapStep(1)); BTN.unshift(BTN.pop()); }
+function mapStepButtons() {   // rooftop arrows: same size and spot as the in-game move arrows (bottom-left, side by side). Rooftops only, never the country
+  const w = WORLDS[mapW]; if (!w.ready) return;
+  const c = ctrlLayout(), canL = mapSel > 0, canR = mapSel < w.levels.length - 1 && unlocked(mapW, mapSel + 1);
+  const one = (x, dir, on, fn) => {
+    ctx.save(); ctx.globalAlpha = on ? 1 : 0.35;
+    ci(x, c.by, c.bs / 2); ctx.fillStyle = 'rgba(27,20,40,.3)'; ctx.fill(); ctx.lineWidth = 2.5; ctx.strokeStyle = 'rgba(255,243,224,.85)'; ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(x - dir * c.bs * 0.1, c.by - c.bs * 0.17); ctx.lineTo(x + dir * c.bs * 0.14, c.by); ctx.lineTo(x - dir * c.bs * 0.1, c.by + c.bs * 0.17); ctx.closePath(); ctx.fillStyle = '#FFF3E0'; ctx.fill();
+    ctx.restore();
+    BTN.unshift({ x: x - c.bs / 2, y: c.by - c.bs / 2, w: c.bs, h: c.bs, fn: () => { if (on) fn(); } });
+  };
+  one(c.lx, -1, canL, () => mapSel--); one(c.rx, 1, canR, () => mapSel++);
+  if (TEST_UNLOCK) flatText('TEST MODE', VW - SAFE.r - 12, VH - SAFE.b - 12, Math.round(11 * U), COL.sun, 'right', '800 ' + FB);
 }
 function mapCanStep(dir) {
   const w = WORLDS[mapW];

@@ -1,12 +1,13 @@
 # Noodle and the Sunbeam Heist — handoff guide
 
-Current version: **v45** (shown bottom-right of the title screen). Check a deploy with `?v=45`.
+Current version: **v46** (shown bottom-right of the title screen). Check a deploy with `?v=46`.
 
 **Test mode:** add `?unlock` (or `&unlock`) to the link, e.g. `https://brilemaster.github.io/Noodles/?v=42&unlock`, to open every built level without saving anything as cleared. The map shows "TEST MODE". Remove it from the link to play normally.
 
 ## Changelog
 - v1: World 1 built.
 - v2: game-feel update (owner asked: keep art, make it feel like a snappy Mario game). New movement physics, animation, juice, power-ups, treasures, flagpole, HUD clarity.
+- v46: map arrows reworked (owner). Country arrows stay beside the big title but are larger (46·U); title a bit bigger. The rooftop arrows now copy the in-game move arrows exactly (same size and spot from `ctrlLayout`, side by side in the bottom-left) and **only move between rooftops in this country**; they dim at the ends. Rooftops start to the right of those arrows. TEST MODE tag is bottom-right. Keyboard ←/→ on the map still roll into the next country.
 - v45: (owner feedback) **checkpoints trigger when you pass them**, not only on touch (jumping over one still saves it); same for the goal pole, so you can't skip past the end (`past()` in `updatePlay`, same room only, never in secret rooms). **Move arrows** sit closer together and lower in the bottom-left corner (`ctrlLayout`). **Map step arrows**: big round ◀ ▶ in the bottom corners walk through the stops and roll into the next/previous country at the ends (`mapStep`, `mapCanStep`, `mapStepButtons`; keyboard arrows use the same). TEST MODE tag moved to bottom center. Fixed the Dublin pigeon that spawned inside the stairs and jittered in place (now at x 137). `test/stuck.js` checks every level for walkers stuck in walls.
 - v44: **clean map screen** (owner picked mockup A on the Noodle Menu Ideas canvas). Big outlined city name up top with arrows beside it; the chosen stop's name in smaller text under it; trip progress as a row of dots (filled = cities done, gold = here, hollow = ahead) plus "★ x / 15" in one small pill. Home and Nap Sack are round icon buttons like the sound buttons (`mapIconBtn`). No bottom card and no name signs on the rooftops (roofs keep their 3 stars); a dark "▶ Play" speech bubble bobs over Noodles (tap it, or tap the chosen roof again). Buildings now run to the bottom edge. TEST MODE is a small tag bottom-left. Helpers: `outlineText`, `mapIconBtn`.
 - v43: secret rooms show their **exit door** again (the themed back wall from v41 was painting over it). `drawPartyRoom` now redraws `exit` deco on top of the wall.
