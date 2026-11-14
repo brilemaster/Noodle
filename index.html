@@ -17,18 +17,18 @@
 html,body{margin:0;padding:0;width:100%;height:100%;overflow:hidden;background:#2B1B3D;touch-action:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent;overscroll-behavior:none;position:fixed;inset:0}
 canvas{position:fixed;left:0;top:0;display:block;touch-action:none}
 #safe{position:fixed;visibility:hidden;pointer-events:none;padding:env(safe-area-inset-top,0px) env(safe-area-inset-right,0px) env(safe-area-inset-bottom,0px) env(safe-area-inset-left,0px)}
-#namebox{position:fixed;inset:0;display:flex;align-items:flex-start;justify-content:center;padding-top:6vh;background:rgba(43,27,61,.72);z-index:5;touch-action:manipulation}
+#namebox{position:fixed;inset:0;display:flex;align-items:flex-start;justify-content:center;padding-top:9vh;background:rgba(30,20,44,.55);z-index:5;touch-action:manipulation;-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px)}
 #namebox.hide{display:none}
-#namebox .card{background:#FFF4D6;border:4px solid #2B1B3D;border-radius:22px;padding:18px 22px 20px;width:min(380px,86vw);box-shadow:0 6px 0 rgba(43,27,61,.4);font-family:Fredoka,"Arial Rounded MT Bold",sans-serif;color:#2B1B3D;text-align:center}
-#namebox h2{font-family:"Lilita One","Arial Rounded MT Bold",sans-serif;font-weight:400;font-size:28px;margin:0 0 4px;color:#FF9F1C;-webkit-text-stroke:1.5px #2B1B3D}
-#namebox p{margin:0 0 12px;font-size:15px}
-#nameinput{font:600 22px Fredoka,sans-serif;width:100%;box-sizing:border-box;padding:10px 14px;border:3px solid #2B1B3D;border-radius:14px;text-align:center;outline:none;-webkit-user-select:text;user-select:text;touch-action:manipulation}
-#nameinput:focus{border-color:#FF9F1C}
+#namebox .card{background:#FFF6EA;border-radius:26px;padding:24px 26px 22px;width:min(400px,86vw);box-shadow:0 18px 50px rgba(20,12,30,.35);font-family:Fredoka,"Arial Rounded MT Bold",sans-serif;color:#2E2140;text-align:left}
+#namebox h2{font-family:Fraunces,Georgia,serif;font-weight:700;font-size:30px;margin:0 0 4px;color:#2E2140}
+#namebox p{margin:0 0 16px;font-size:15px;color:#6B4560}
+#nameinput{font:600 21px Fredoka,sans-serif;width:100%;box-sizing:border-box;padding:12px 16px;border:2px solid #E2D2DA;border-radius:16px;background:#FFFFFF;color:#2E2140;outline:none;-webkit-user-select:text;user-select:text;touch-action:manipulation}
+#nameinput:focus{border-color:#2E2140}
 #nameinput.shake{animation:sh .35s}
 @keyframes sh{25%{transform:translateX(-8px)}75%{transform:translateX(8px)}}
-#namebox .row{display:flex;gap:10px;margin-top:14px;justify-content:center}
-#namebox button{font:400 20px "Lilita One",sans-serif;padding:10px 22px;border:3px solid #2B1B3D;border-radius:16px;background:#FFC93C;color:#fff;-webkit-text-stroke:1px #2B1B3D;touch-action:manipulation;cursor:pointer}
-#namebox button#namecancel{background:#E9E3F0;color:#2B1B3D;-webkit-text-stroke:0}
+#namebox .row{display:flex;gap:10px;margin-top:18px;justify-content:flex-end}
+#namebox button{font:600 18px Fredoka,sans-serif;padding:11px 24px;min-height:46px;border:0;border-radius:23px;background:#2E2140;color:#FFF3E0;touch-action:manipulation;cursor:pointer}
+#namebox button#namecancel{background:transparent;color:#6B4560}
 </style>
 </head>
 <body>
@@ -36,15 +36,15 @@ canvas{position:fixed;left:0;top:0;display:block;touch-action:none}
 <div id="safe"></div>
 <audio id="music" src="music.mp3" loop preload="auto" playsinline></audio>
 <div id="namebox" class="hide"><div class="card">
-<h2>Who’s playing?</h2>
-<p>First name only. It’s saved on this device.</p>
+<h2 id="nametitle">Add a player</h2>
+<p>A first name or nickname. Progress is saved on this device.</p>
 <input id="nameinput" maxlength="12" autocomplete="off" autocapitalize="words" spellcheck="false" enterkeyhint="done">
-<div class="row"><button id="namecancel">Cancel</button><button id="nameok">Let’s go</button></div>
+<div class="row"><button id="namecancel">Cancel</button><button id="nameok">Add</button></div>
 </div></div>
 <script>
 'use strict';
 // ================= CORE: constants, physics, level data =================
-const VERSION = 36;
+const VERSION = 39;
 const T = 32;          // tile size in world units
 const LH = 16;         // level height in tiles
 const clamp = (v, a, b) => v < a ? a : (v > b ? b : v);
@@ -52,7 +52,7 @@ const lerp = (a, b, t) => a + (b - a) * t;
 const rnd = (a, b) => a + Math.random() * (b - a);
 
 // Movement matched to Super Noah: steady top speed, smooth glide to a stop, one gravity up and down
-const PH = { G: 0.71, MAXF: 14, JV: -14.2, CAPV: -5, ACC: 0.7, AACC: 0.45, FRICG: 0.7, FRICA: 0.94,
+const PH = { G: 0.71, FALLG: 1.65, AIRRUN: 1.14, MAXF: 16, JV: -14.2, CAPV: -5, ACC: 0.7, AACC: 0.45, FRICG: 0.7, FRICA: 0.94,
   RUN: 4.4, ZRUN: 6, SPRING: -19.3, BOP: -10.2, BOPH: -14.8, BALLOON: -14.8, BALLOONH: -17, LINE: -15.9 };
 // Easy mode (also matched to Super Noah): 45% speed, gentler acceleration, softer falls
 const MOVE = { easy: false };
@@ -286,6 +286,7 @@ function stepPlayer(p, inp, L, ev) {
     p.holdJump = inp.jump;
     let acc = p.onGround ? PH.ACC : PH.AACC, max = p.zoom > 0 ? PH.ZRUN : PH.RUN;
     if (p.soak > 0) max *= 0.7;   // soaked by a Songkran splasher: a bit slower
+    if (!p.onGround && !p.riding && p.zoom <= 0) max *= PH.AIRRUN;
     if (p.riding && L.drone && L.drone.kind === 'tuk') max = 6.5;
     if (p.riding && L.drone && L.drone.kind === 'ele') max = 5.4;
     if (p.riding && L.drone && L.drone.kind === 'cart') max = 6.2;
@@ -329,7 +330,7 @@ function stepPlayer(p, inp, L, ev) {
       if (inp.jump) p.vy = Math.max(p.vy - 0.6, -4.2);
       else { const tv = clamp((cruise - p.y) * 0.08, -3, 3); p.vy += (tv - p.vy) * 0.18; }
       if (p.y < 8) { p.y = 8; if (p.vy < 0) p.vy = 0; }
-    } else { p.hovering = false; p.vy += (MOVE.easy && p.vy > 0) ? 0.38 : PH.G; }
+    } else { p.hovering = false; p.vy += (MOVE.easy && p.vy > 0) ? 0.38 : (p.vy > 0 && !p.fan ? PH.G * PH.FALLG : PH.G); }
     if (p.power === 'umbrella' && !p.riding && inp.jump && p.vy > 1.6) { p.vy = 1.6; p.gliding = true; } else p.gliding = false;
     // rooftop fans blow you upward
     p.fan = false;
@@ -1024,7 +1025,7 @@ function b35() {
 }
 // ---------------- City 4: Phuket ----------------
 function b41() {
-  const L = mk(178, 'Patong Beach', 15, 75); L.start = { tx: 2, s: 3 };
+  const L = mk(178, 'Kata Noi Beach', 15, 75); L.start = { tx: 2, s: 3 };
   room(L, 0, 153);
   ground(L, 0, 40, 3); sunspot(L, 3, 3, 3); sunspot(L, 30, 3, 3);
   greet(L, 10, 'Sawasdee kha! Sunscreen?'); greet(L, 104, 'Fresh mango, Noodles?');
@@ -1499,7 +1500,7 @@ const WORLDS = [
     { id: '3-4', name: 'Yi Peng Night', build: () => addJars(lowerBoxes(b34())) },
     { id: '3-5', name: 'Temple Steps', build: () => addJars(lowerBoxes(b35())), boss: true } ] },
   { n: 4, name: 'Phuket', theme: 18, ready: true, levels: [
-    { id: '4-1', name: 'Patong Beach', build: () => addJars(lowerBoxes(b41())) },
+    { id: '4-1', name: 'Kata Noi Beach', build: () => addJars(lowerBoxes(b41())) },
     { id: '4-2', name: 'Resort Pools', build: () => addJars(lowerBoxes(b42())) },
     { id: '4-3', name: 'Old Town Colors', build: () => addJars(lowerBoxes(b43())) },
     { id: '4-4', name: 'Promthep Sunset', build: () => addJars(lowerBoxes(b44())) },
@@ -2014,7 +2015,7 @@ const THEMES = [
   { name: 'cm-yipeng', cm: true, night: true, sky: ['#0E1430', '#1D2456', '#4A2E6C', '#B5537A'], far: '#2A2F5E', haze: '#B5537A', mid: '#111632', win: '#FFD27A', sun: '#F3F0FF', brick: '#7E5A48', brickD: '#523A30', cap: '#22322A', capL: '#3E5A44', chim: '#8E6A55' },
   { name: 'cm-dusk', cm: true, sky: ['#FF975A', '#FFC078', '#E88888', '#9B588A'], far: '#A6657C', haze: '#FFB88A', mid: '#3E284C', win: '#FFC86B', sun: '#FFF0C4', brick: '#A8664A', brickD: '#7A4634', cap: '#2E4A30', capL: '#4F7A4A', chim: '#B07A55' },
   // Phuket
-  { name: 'pk-morning', pk: true, sky: ['#7FD3F0', '#B5E6F4', '#FDE6C8', '#F9CDA8'], far: '#8FC4C8', sea: '#3FB8C8', haze: '#E8F4EE', mid: '#2E6A6E', win: '#FFE59A', sun: '#FFF8E0', brick: '#D9A066', brickD: '#B07A44', cap: '#2A4A50', capL: '#4A7A80', chim: '#E0A878' },
+  { name: 'pk-morning', pk: true, cove: true, sky: ['#7FD3F0', '#B5E6F4', '#FDE6C8', '#F9CDA8'], far: '#8FC4C8', sea: '#3FB8C8', haze: '#E8F4EE', mid: '#2E6A6E', win: '#FFE59A', sun: '#FFF8E0', brick: '#D9A066', brickD: '#B07A44', cap: '#2A4A50', capL: '#4A7A80', chim: '#E0A878' },
   { name: 'pk-noon', pk: true, sky: ['#1FB0F0', '#5ACCF6', '#A8EAF4', '#E8FAF2'], far: '#80C0D0', sea: '#1FB6C6', haze: '#D8F4F2', mid: '#1F5E6A', win: '#FFE59A', sun: '#FFFBE8', brick: '#D9A066', brickD: '#B07A44', cap: '#2A4A50', capL: '#4A7A80', chim: '#E0A878' },
   { name: 'pk-pool', pk: true, sky: ['#2FC0E6', '#7ADCEE', '#FFE9B8', '#FFCB98'], far: '#8CCCCC', sea: '#2FC0C8', haze: '#DFF4EE', mid: '#255E66', win: '#FFE59A', sun: '#FFF6D8', brick: '#E0A870', brickD: '#B57E48', cap: '#2A4A50', capL: '#4A7A80', chim: '#E0A878' },
   { name: 'pk-sunset', pk: true, sky: ['#FF8E4A', '#FFB65C', '#FF7E86', '#C2479A'], far: '#B65C88', sea: '#E2708A', haze: '#FFB27A', mid: '#45296A', win: '#FFC86B', sun: '#FFF0C4', brick: '#D88A5A', brickD: '#A9603E', cap: '#3A2350', capL: '#5A3A78', chim: '#D27C64' },
@@ -3378,6 +3379,19 @@ function makePkLayer(th, far, h) {
   const R = seeded(far ? 400 : 401);
   if (far) {
     const sea = h * 0.6;
+    if (th.cove) {   // Kata Noi: a small bay hemmed in by steep, jungle-covered headlands
+      g.fillStyle = th.sea; g.globalAlpha = 0.8; g.fillRect(0, sea, w, h - sea); g.globalAlpha = 1;
+      for (const [x0, dir] of [[0, 1], [w, -1]]) {
+        g.fillStyle = '#4E8A6A'; g.beginPath(); g.moveTo(x0, h);
+        g.lineTo(x0, h * 0.12); g.quadraticCurveTo(x0 + dir * w * 0.14, h * 0.1, x0 + dir * w * 0.22, h * 0.32);
+        g.quadraticCurveTo(x0 + dir * w * 0.3, h * 0.5, x0 + dir * w * 0.34, sea); g.lineTo(x0 + dir * w * 0.36, h); g.fill();
+        g.fillStyle = '#3E7458'; for (let i = 0; i < 9; i++) { g.beginPath(); g.arc(x0 + dir * w * (0.03 + i * 0.033), h * (0.16 + (i % 3) * 0.08 + i * 0.03), 20, 0, Math.PI * 2); g.fill(); }
+        g.fillStyle = 'rgba(160,140,120,.55)'; g.beginPath(); g.moveTo(x0 + dir * w * 0.26, h * 0.42); g.lineTo(x0 + dir * w * 0.34, sea); g.lineTo(x0 + dir * w * 0.29, sea); g.fill();   // bare rock face
+      }
+      g.fillStyle = 'rgba(255,255,255,.45)'; for (let i = 0; i < 12; i++) g.fillRect(w * 0.36 + R() * w * 0.28, sea + 8 + R() * (h - sea - 12), 20 + R() * 20, 2);
+      g.fillStyle = th.far; g.beginPath(); g.moveTo(w * 0.47, sea); g.quadraticCurveTo(w * 0.5, sea - 46, w * 0.53, sea); g.fill();   // a little island in the bay
+      return c;
+    }
     g.fillStyle = th.sea; g.globalAlpha = 0.8; g.fillRect(0, sea, w, h - sea); g.globalAlpha = 1;
     g.fillStyle = 'rgba(255,255,255,.35)'; for (let i = 0; i < 20; i++) g.fillRect(R() * w, sea + 8 + R() * (h - sea - 10), 20 + R() * 30, 2);
     g.fillStyle = th.far;
@@ -3404,6 +3418,14 @@ function makePkLayer(th, far, h) {
       g.fillStyle = pastel[k % 5]; g.globalAlpha = 0.85; g.beginPath(); g.arc(x + 31, h * 0.72, 30, Math.PI, 0); g.fill(); g.globalAlpha = 1;
       g.fillStyle = th.mid; g.fillRect(x + 4, h * 0.9, 24, 4); g.fillRect(x + 36, h * 0.9, 24, 4);
       x += 70; k++; continue;
+    }
+    if (th.cove) {   // Kata Noi: low thatched beach bungalows on stilts instead of town shophouses
+      const bw = 80 + R() * 20, top = h * 0.8; g.fillStyle = th.mid;
+      for (let i = 0; i < 3; i++) g.fillRect(x + 8 + i * (bw - 20) / 2, top + 30, 4, h - top - 30);
+      g.fillRect(x, top, bw, 34); g.beginPath(); g.moveTo(x - 12, top + 4); g.lineTo(x + bw / 2, top - 30); g.lineTo(x + bw + 12, top + 4); g.fill();
+      g.fillStyle = 'rgba(214,170,110,.55)'; g.beginPath(); g.moveTo(x - 10, top + 2); g.lineTo(x + bw / 2, top - 27); g.lineTo(x + bw + 10, top + 2); g.fill();
+      g.fillStyle = th.win; g.fillRect(x + 14, top + 10, 14, 14); g.fillRect(x + bw - 28, top + 10, 14, 14); c.wins.push({ x: x + 14, y: top + 10, w: 14, h: 14 });
+      x += bw + 30; k++; continue;
     }
     // pastel Sino-Portuguese shophouse: arched windows, shutters, decorative parapet
     const bw = 70 + R() * 26, bh = h * (0.4 + R() * 0.14), top = h - bh;
@@ -4219,6 +4241,7 @@ function dlgEnd() {
 function updateDialog() {
   if (!DLG) return;
   DLG.t++;
+  if (G && G.fade > 0) G.fade = Math.max(0, G.fade - 2);   // fade the level in behind the story
   const line = DLG.lines[DLG.i];
   if (DLG.chars < line.s.length) {
     const before = Math.floor(DLG.chars);
@@ -4317,11 +4340,11 @@ const JUMPWORDS = ['hup!', 'hop!', 'yip!', 'boop!', 'mrrp!'];
 function onEvent(e) {
   const g = G, p = g.p;
   switch (e.t) {
-    case 'jump': SFX.jump(); dust(p.x + p.w / 2, p.y + p.h, 9); g.squash = -0.36;
+    case 'jump': SFX.jump(); dust(p.x + p.w / 2, p.y + p.h, 12); g.squash = -0.48; haptic(8);
       break;
     case 'land': {
-      const hit = Math.min(0.38, 0.08 + g.lastVy * 0.03);
-      SFX.land(); dust(p.x + p.w / 2, p.y + p.h, g.lastVy > 8 ? 9 : 5); g.squash = hit; g.combo = 0;
+      const hit = Math.min(0.42, 0.12 + g.lastVy * 0.03);
+      SFX.land(); dust(p.x + p.w / 2, p.y + p.h, g.lastVy > 8 ? 12 : 7); g.squash = hit; g.combo = 0;
       if (g.lastVy > 9) g.shake = Math.max(g.shake, 2); break; }
     case 'spring': SFX.spring(); g.springT.set(e.tx + ',' + e.ty, 14); 
       if (THEMES[g.L.theme].nash) burst(e.tx * T + 16, e.ty * T + 4, 10, [COL.sun, COL.pink, COL.mint], 4, 'note');
@@ -4921,7 +4944,7 @@ function resumeGame() { S = 'play'; clearInputs(); }
 // --------- title actions ---------
 function titlePlay() {
   if (TOUCH_DEV && SAVE.autoFull !== false) goFullscreen();
-  if (!prof()) { askName(); return; }
+  if (!prof()) { S = 'profiles'; askName('profiles', 'play'); return; }
   const pr = prof();
   mapW = 0; mapSel = firstOpenLevel(0);
   if (!pr.seen.intro) { S = 'map'; startScene('intro', null); DLG.back = 'map'; DLG.bg = 'title'; }
@@ -4930,12 +4953,14 @@ function titlePlay() {
 function firstOpenLevel(wi) { const w = WORLDS[wi]; let s = 0; for (let i = 0; i < w.levels.length; i++) { if (unlocked(wi, i)) s = i; if (!(levelRec(w.levels[i].id) || {}).cleared) break; } return s; }
 
 // --------- name entry (DOM overlay so phone keyboards work) ---------
-let nameCancelTo = null;
-function askName(cancelTo) {
+let nameCancelTo = null, nameAfter = null, renameIdx = -1;
+function askName(cancelTo, after, rename) {
   const box = document.getElementById('namebox'), el2 = document.getElementById('nameinput');
-  nameCancelTo = cancelTo || null;
-  document.getElementById('namecancel').style.display = cancelTo ? '' : 'none';
-  el2.value = ''; box.classList.remove('hide'); S = 'name'; clearInputs();
+  nameCancelTo = cancelTo || 'profiles'; nameAfter = after || 'profiles'; renameIdx = rename === undefined ? -1 : rename;
+  document.getElementById('namecancel').style.display = '';
+  document.getElementById('nametitle').textContent = renameIdx >= 0 ? 'Rename player' : 'Add a player';
+  document.getElementById('nameok').textContent = renameIdx >= 0 ? 'Save' : 'Add';
+  el2.value = renameIdx >= 0 ? SAVE.profiles[renameIdx].name : ''; box.classList.remove('hide'); S = 'profiles'; clearInputs();
   setTimeout(() => { try { el2.focus(); } catch (e) { } }, 60);
 }
 function cleanName(v) {
@@ -4945,7 +4970,9 @@ function cleanName(v) {
 function nameSubmit() {
   const el2 = document.getElementById('nameinput'); const v = cleanName(el2.value);
   if (!v) { el2.classList.remove('shake'); void el2.offsetWidth; el2.classList.add('shake'); return; }
-  addProfile(v); closeName('title');
+  if (renameIdx >= 0) { SAVE.profiles[renameIdx].name = v; persist(); closeName('profiles'); return; }
+  addProfile(v); closeName(nameAfter === 'play' ? 'title' : nameAfter);
+  if (nameAfter === 'play') titlePlay();
 }
 function closeName(to) {
   const el2 = document.getElementById('nameinput'); try { el2.blur(); } catch (e) { }
@@ -5536,27 +5563,82 @@ function renderSettings() {
 }
 
 // --------- profiles ---------
+let profMenu = -1, playersTab = 0;
+function playerStats(p) {
+  let stars = 0, finds = 0, far = -1;
+  for (const id in p.levels) { const r = p.levels[id]; stars += starsFor(r); if (r && r.tokens) finds += r.tokens.filter(Boolean).length; if (r && r.cleared) far = Math.max(far, parseInt(id, 10) - 1); }
+  return { stars, finds, far };
+}
 function renderProfiles() {
-  drawBackground(THEMES[1], T0 * 0.3, 0, 0, T0, false);
-  ctx.fillStyle = 'rgba(43,27,61,.35)'; ctx.fillRect(0, 0, VW, VH);
-  txt('Who’s playing?', VW / 2, SAFE.t + 40 * U, Math.round(30 * U), COL.white);
-  const n = SAVE.profiles.length, bw = Math.min(360 * U, VW * 0.6), bh = 46 * U, gap = 10 * U;
-  const y0 = SAFE.t + 72 * U;
-  for (let i = 0; i < n; i++) {
-    const p = SAVE.profiles[i], y = y0 + i * (bh + gap), cur = i === SAVE.cur;
-    button(VW / 2 - bw / 2, y, bw, bh, p.name + '   ★ ' + totalStars(p), () => { SAVE.cur = i; persist(); S = 'title'; },
-      cur ? { size: Math.round(19 * U), c1: '#7FF0C0', c2: COL.mint } : { size: Math.round(19 * U), c1: '#FFFFFF', c2: '#D8CFE8', tc: COL.ink });
-    button(VW / 2 + bw / 2 + 10 * U, y + 5 * U, 84 * U, bh - 10 * U, profConfirm === i ? 'Sure?' : 'Remove', () => {
-      if (profConfirm !== i) { profConfirm = i; return; }
-      SAVE.profiles.splice(i, 1); if (SAVE.cur >= SAVE.profiles.length) SAVE.cur = Math.max(0, SAVE.profiles.length - 1); profConfirm = -1; persist();
-      if (!SAVE.profiles.length) askName();
-  // prepare every built-in song in the background so level music starts instantly
-  setTimeout(() => Object.keys(SONGS).forEach((n, i) => setTimeout(() => renderSong(n), i * 350)), 400);
-    }, { size: Math.round(13 * U), c1: profConfirm === i ? '#FF8FA3' : '#E9E3F0', c2: profConfirm === i ? COL.red : '#C9C2D6', tc: profConfirm === i ? COL.white : COL.ink });
+  drawTitleScene();
+  ctx.fillStyle = 'rgba(30,20,44,.38)'; ctx.fillRect(0, 0, VW, VH);
+  const compact = VH < 560;   // phones: one header line, one line per player
+  const pw = Math.min(680 * Math.min(U, 1.4), VW - 32), px = VW / 2 - pw / 2, py = SAFE.t + (compact ? 10 : 16), ph = VH - SAFE.t - SAFE.b - (compact ? 20 : 32);
+  rr(px, py, pw, ph, (compact ? 20 : 26) * U); ctx.fillStyle = 'rgba(255,246,234,.97)'; ctx.fill();
+  const hs = compact ? 0.82 : 1;
+  ctx.font = '700 ' + Math.round(32 * U * hs) + 'px ' + FT; ctx.fillStyle = '#2E2140'; ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
+  ctx.fillText('Players', px + 24 * U, py + (compact ? 38 : 52) * U);
+  const titleW = ctx.measureText('Players').width;
+  flatPill(px + pw - 104 * U, py + (compact ? 12 : 20) * U, 86 * U, (compact ? 34 : 40) * U, 'Done', () => { profMenu = -1; profConfirm = -1; S = 'title'; }, { size: Math.round(15 * U) });
+  const canAdd = SAVE.profiles.length < 8;
+  if (compact && canAdd && playersTab === 0) flatPill(px + pw - 104 * U - 142 * U, py + 12 * U, 132 * U, 34 * U, '+ Add a player', () => { profMenu = -1; askName('profiles', 'profiles'); }, { size: Math.round(14 * U) });
+  // tabs: this device (now) and everyone (once the online leaderboard is connected)
+  const tw = (compact ? 120 : 150) * U, th = (compact ? 30 : 34) * U;
+  const tx0 = compact ? px + 40 * U + titleW : px + 24 * U, ty = compact ? py + 14 * U : py + 72 * U;
+  ['This device', 'Everyone'].forEach((lbl, i) => {
+    const on = playersTab === i, tx = tx0 + i * (tw + 8 * U);
+    rr(tx, ty, tw, th, th / 2); ctx.fillStyle = on ? '#2E2140' : 'rgba(46,33,64,.08)'; ctx.fill();
+    flatText(lbl, tx + tw / 2, ty + th / 2, Math.round(13.5 * U), on ? '#FFF3E0' : '#6B4560', 'center', '700 ' + FB);
+    BTN.push({ x: tx, y: ty, w: tw, h: th, fn: () => { playersTab = i; profMenu = -1; } });
+  });
+  const top = compact ? py + 58 * U : ty + 50 * U, bottom = py + ph - (compact ? 10 * U : 76 * U);
+  if (playersTab === 1) {
+    flatText('A worldwide leaderboard is coming soon.', VW / 2, (top + bottom) / 2 - 14 * U, Math.round(18 * U), '#2E2140', 'center', '700 ' + FB);
+    flatText('Once it’s connected, everyone’s stars will show up here.', VW / 2, (top + bottom) / 2 + 14 * U, Math.round(14 * U), '#6B4560', 'center', '600 ' + FB);
+    return;
   }
-  const yb = y0 + n * (bh + gap) + 6 * U;
-  if (n < 4) button(VW / 2 - bw / 2, yb, bw, bh, '+ New player', () => askName('profiles'), { size: Math.round(19 * U) });
-  button(SAFE.l + 14, SAFE.t + 14, 96 * U, 40 * U, 'Back', () => { S = 'title'; }, { size: Math.round(17 * U), c1: '#FFFFFF', c2: '#D8CFE8', tc: COL.ink });
+  const list = SAVE.profiles.map((p, i) => ({ p, i, st: playerStats(p) })).sort((a, b) => b.st.stars - a.st.stars || b.st.finds - a.st.finds || a.i - b.i);
+  if (!list.length) flatText('No players yet. Add one to start saving progress.', VW / 2, (top + bottom) / 2, Math.round(16 * U), '#6B4560', 'center', '600 ' + FB);
+  const rowH = Math.min((compact ? 44 : 64) * U, (bottom - top) / Math.max(list.length, compact ? 1 : 1));
+  const one = compact || rowH < 52 * U, k = Math.min(1, rowH / ((one ? 44 : 64) * U));
+  const medal = ['#F2B530', '#B9C0CC', '#D08A55'];
+  list.forEach((e, r) => {
+    const y = top + r * rowH, cy = y + rowH / 2, cur = e.i === SAVE.cur, menu = profMenu === e.i;
+    rr(px + 14 * U, y + 2, pw - 28 * U, rowH - 4, Math.min(16 * U, rowH / 2.2)); ctx.fillStyle = cur ? 'rgba(233,149,74,.18)' : (r % 2 ? 'rgba(46,33,64,.035)' : 'rgba(46,33,64,.065)'); ctx.fill();
+    if (cur) { ctx.lineWidth = 2; ctx.strokeStyle = 'rgba(233,149,74,.7)'; ctx.stroke(); }
+    const rx0 = px + 40 * U, ax = px + (one ? 72 : 84) * U, nx = px + (one ? 96 : 112) * U;
+    ci(rx0, cy, 13 * U * k); ctx.fillStyle = r < 3 && e.st.stars > 0 ? medal[r] : 'rgba(46,33,64,.12)'; ctx.fill();
+    flatText(String(r + 1), rx0, cy + 1, Math.round(13 * U * Math.max(k, 0.85)), '#2E2140', 'center', '800 ' + FB);
+    ci(ax, cy, (one ? 14 : 18) * U * k); ctx.fillStyle = '#E9954A'; ctx.fill();
+    flatText(e.p.name.charAt(0).toUpperCase(), ax, cy + 1, Math.round((one ? 14 : 17) * U * Math.max(k, 0.85)), '#2E2140', 'center', '800 ' + FB);
+    const where = e.st.far >= 0 ? 'reached ' + WORLDS[Math.min(e.st.far, WORLDS.length - 1)].name : 'just getting started';
+    const stats = '★ ' + e.st.stars + '  ·  ' + e.st.finds + ' finds  ·  ' + where;
+    if (one) {
+      const nsz = Math.round(16 * U * Math.max(k, 0.85)); ctx.font = '800 ' + nsz + 'px ' + FB; const nw = ctx.measureText(e.p.name).width;
+      flatText(e.p.name, nx, cy + 1, nsz, '#2E2140', 'left', '800 ' + FB);
+      if (!menu) flatText(stats, nx + nw + 16 * U, cy + 1, Math.round(12.5 * U * Math.max(k, 0.85)), '#6B4560', 'left', '600 ' + FB);
+    } else {
+      flatText(e.p.name, nx, cy - 9 * U, Math.round(19 * U), '#2E2140', 'left', '800 ' + FB);
+      if (!menu) flatText(stats, nx, cy + 13 * U, Math.round(13 * U), '#6B4560', 'left', '600 ' + FB);
+    }
+    const rx = px + pw - 28 * U, bh2 = Math.min(32 * U, rowH - 8);
+    if (menu) {
+      const bw2 = 82 * U;
+      flatPill(rx - bw2 * 2 - 8 * U, cy - bh2 / 2, bw2, bh2, 'Rename', () => { profMenu = -1; askName('profiles', 'profiles', e.i); }, { bg: 'rgba(46,33,64,.1)', fg: '#2E2140', size: Math.round(13.5 * U) });
+      flatPill(rx - bw2, cy - bh2 / 2, bw2, bh2, profConfirm === e.i ? 'Sure?' : 'Remove', () => {
+        if (profConfirm !== e.i) { profConfirm = e.i; return; }
+        SAVE.profiles.splice(e.i, 1); if (SAVE.cur >= SAVE.profiles.length) SAVE.cur = Math.max(0, SAVE.profiles.length - 1); profConfirm = -1; profMenu = -1; persist();
+      }, { bg: profConfirm === e.i ? '#D9485F' : 'rgba(217,72,95,.12)', fg: profConfirm === e.i ? '#FFF3E0' : '#B23A4E', size: Math.round(13.5 * U) });
+    } else {
+      flatPill(rx - bh2, cy - bh2 / 2, bh2, bh2, '⋯', () => { profMenu = e.i; profConfirm = -1; }, { bg: 'rgba(46,33,64,.08)', fg: '#2E2140', size: Math.round(15 * U) });
+      if (cur) { const pw2 = 76 * U, ph2 = Math.min(26 * U, rowH - 10); rr(rx - bh2 - 8 * U - pw2, cy - ph2 / 2, pw2, ph2, ph2 / 2); ctx.fillStyle = '#E9954A'; ctx.fill(); flatText('Playing', rx - bh2 - 8 * U - pw2 / 2, cy + 1, Math.round(12.5 * U), '#2E2140', 'center', '800 ' + FB); }
+    }
+    BTN.unshift({ x: px + 14 * U, y: y + 2, w: pw - 28 * U - (menu ? 190 * U : bh2 + 16 * U), h: rowH - 4, fn: () => { profMenu = -1; profConfirm = -1; SAVE.cur = e.i; persist(); S = 'title'; } });
+  });
+  if (!compact) {
+    if (canAdd) flatPill(px + pw / 2 - 120 * U, py + ph - 62 * U, 240 * U, 46 * U, '+ Add a player', () => { profMenu = -1; askName('profiles', 'profiles'); }, { size: Math.round(17 * U) });
+    else flatText('8 players max', VW / 2, py + ph - 40 * U, Math.round(13 * U), '#6B4560', 'center', '600 ' + FB);
+  }
 }
 
 // --------- album ---------
@@ -5652,6 +5734,14 @@ function renderMap() {
     const bx = x - bw2 / 2, body = open ? (sel ? '#5A3A78' : '#4B2F63') : '#2E1E40';
     if (sel) { ctx.save(); ctx.globalAlpha = 0.35 + Math.sin(T0 * 0.05) * 0.08; const gr = ctx.createLinearGradient(0, y - 220 * U, 0, y); gr.addColorStop(0, 'rgba(255,236,160,0)'); gr.addColorStop(1, '#FFE680'); ctx.fillStyle = gr; ctx.beginPath(); ctx.moveTo(x - bw2 * 0.2, y - 220 * U); ctx.lineTo(x + bw2 * 0.9, y - 220 * U); ctx.lineTo(x + bw2 * 0.55, y); ctx.lineTo(x - bw2 * 0.55, y); ctx.closePath(); ctx.fill(); ctx.restore(); }
     drawMapStop(th, lv, i, x, y, bw2, cardTop, open);
+    { // the stop's name, on a little sign under its stars
+      const fsz = Math.round(clamp(12 * U, 11, 17)), maxW = bw2 + 18 * U; ctx.font = '800 ' + fsz + 'px ' + FB;
+      const words = lv.name.split(' '), lines = []; let cur = '';
+      for (const wd of words) { const tr = cur ? cur + ' ' + wd : wd; if (ctx.measureText(tr).width > maxW - 14 * U && cur) { lines.push(cur); cur = wd; } else cur = tr; } if (cur) lines.push(cur);
+      const lw2 = Math.max(...lines.map(l => ctx.measureText(l).width)) + 18 * U, lh2 = fsz * 1.2, ph = lines.length * lh2 + 10 * U, py2 = y + 44 * U;
+      rr(x - lw2 / 2, py2, lw2, ph, 9 * U); ctx.fillStyle = i === mapSel ? 'rgba(255,246,234,.97)' : 'rgba(255,246,234,.85)'; ctx.fill();
+      lines.forEach((l, li) => flatText(l, x, py2 + 5 * U + lh2 * (li + 0.5), fsz, '#2E2140', 'center', '800 ' + FB));
+    }
     if (open) { for (let k = 0; k < 3; k++) { starPath(x - 16 * U + k * 16 * U, y + 26 * U, 6.5 * U, 3 * U); ctx.fillStyle = k < starsFor(rec) ? COL.sun : 'rgba(255,243,224,.3)'; ctx.fill(); } }
     else flatText('Locked', x, y + 26 * U, Math.round(12 * U), 'rgba(255,243,224,.8)', 'center', '700 ' + FB);
     BTN.push({ x: bx - 8, y: y - 60 * U, w: bw2 + 16, h: cardTop - y + 60 * U, fn: () => { if (!open) return; if (mapSel === i) startLevel(mapW, i); else mapSel = i; } });
@@ -5751,7 +5841,6 @@ function boot() {
   document.getElementById('nameok').addEventListener('click', nameSubmit);
   document.getElementById('namecancel').addEventListener('click', () => closeName(nameCancelTo || 'title'));
   document.getElementById('nameinput').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); nameSubmit(); } });
-  if (!SAVE.profiles.length) askName();
   // prepare every built-in song in the background so level music starts instantly
   setTimeout(() => Object.keys(SONGS).forEach((n, i) => setTimeout(() => renderSong(n), i * 350)), 400);
   const go = () => requestAnimationFrame(frame);
