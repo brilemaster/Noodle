@@ -44,7 +44,7 @@ canvas{position:fixed;left:0;top:0;display:block;touch-action:none}
 <script>
 'use strict';
 // ================= CORE: constants, physics, level data =================
-const VERSION = 47;
+const VERSION = 48;
 const T = 32;          // tile size in world units
 const LH = 16;         // level height in tiles
 const clamp = (v, a, b) => v < a ? a : (v > b ? b : v);
@@ -5761,13 +5761,22 @@ function renderMap() {
   w.levels.forEach((lv, i) => {
     const { x, y } = roofs[i], open = unlocked(mapW, i), rec = levelRec(lv.id), sel = i === mapSel;
     const bx = x - bw2 / 2, body = open ? (sel ? '#5A3A78' : '#4B2F63') : '#2E1E40';
-    if (sel) { ctx.save(); ctx.globalAlpha = 0.35 + Math.sin(T0 * 0.05) * 0.08; const gr = ctx.createLinearGradient(0, y - 220 * U, 0, y); gr.addColorStop(0, 'rgba(255,236,160,0)'); gr.addColorStop(1, '#FFE680'); ctx.fillStyle = gr; ctx.beginPath(); ctx.moveTo(x - bw2 * 0.2, y - 220 * U); ctx.lineTo(x + bw2 * 0.9, y - 220 * U); ctx.lineTo(x + bw2 * 0.55, y); ctx.lineTo(x - bw2 * 0.55, y); ctx.closePath(); ctx.fill(); ctx.restore(); }
+    if (sel && open) { ctx.save(); ctx.globalAlpha = 0.35 + Math.sin(T0 * 0.05) * 0.08; const gr = ctx.createLinearGradient(0, y - 220 * U, 0, y); gr.addColorStop(0, 'rgba(255,236,160,0)'); gr.addColorStop(1, '#FFE680'); ctx.fillStyle = gr; ctx.beginPath(); ctx.moveTo(x - bw2 * 0.2, y - 220 * U); ctx.lineTo(x + bw2 * 0.9, y - 220 * U); ctx.lineTo(x + bw2 * 0.55, y); ctx.lineTo(x - bw2 * 0.55, y); ctx.closePath(); ctx.fill(); ctx.restore(); }
     drawMapStop(th, lv, i, x, y, bw2, cardTop, open);
     if (open) { for (let k = 0; k < 3; k++) { starPath(x - 16 * U + k * 16 * U, y + 26 * U, 6.5 * U, 3 * U); ctx.fillStyle = k < starsFor(rec) ? COL.sun : 'rgba(255,243,224,.3)'; ctx.fill(); } }
     else flatText('Locked', x, y + 26 * U, Math.round(12 * U), 'rgba(255,243,224,.8)', 'center', '700 ' + FB);
     BTN.push({ x: bx - 8, y: y - 60 * U, w: bw2 + 16, h: cardTop - y + 60 * U, fn: () => { if (!open) return; if (mapSel === i) startLevel(mapW, i); else mapSel = i; } });
   });
-  const hx = roofs[mapSel].x, hy = roofs[mapSel].y - (w.levels[mapSel].boss || mapSel % 2 === 0 ? 8 * U : 22 * U);
+  if (unlocked(mapW, 0) && !unlocked(mapW, mapSel)) mapSel = firstOpenLevel(mapW);
+  if (!unlocked(mapW, 0)) {   // a city you haven't reached yet: no Noodles, just a note
+    const prev = WORLDS[mapW - 1], msg = 'Finish ' + (prev ? prev.name : 'the last city') + ' to fly here';
+    const fsz = Math.round(18 * U); ctx.font = '800 ' + fsz + 'px ' + FB; const mw = ctx.measureText(msg).width + 40 * U, mh = 44 * U;
+    const my = Math.min(...roofs.map(r => r.y)) - 110 * U;
+    rr(VW / 2 - mw / 2, my, mw, mh, mh / 2); ctx.fillStyle = 'rgba(46,33,64,.85)'; ctx.fill();
+    flatText(msg, VW / 2, my + mh / 2 + 1, fsz, '#FFF3E0', 'center', '800 ' + FB);
+    mapStepButtons(); return;
+  }
+  const hx = roofs[mapSel].x, hy = roofs[mapSel].y - (th.cm ? 30 * U : 8 * U);
   const dozing = T0 - (window.lastInputT || 0) > 300;
   drawNoodle(hx, hy + (dozing ? 2 * U : Math.abs(Math.sin(T0 * 0.12)) * -4), { face: 1, t: T0, anim: dozing ? 'nap' : 'idle', s: 0.85 * U });
   if (dozing) for (let i = 0; i < 3; i++) { const kz = ((T0 * 0.4 + i * 33) % 100) / 100; ctx.save(); ctx.globalAlpha = 1 - kz; flatText('z', hx + 16 * U + kz * 14 * U, hy - 20 * U - kz * 24 * U, Math.round((10 + i * 3) * U), '#FFF3E0', 'center', '800 ' + FB); ctx.restore(); }
@@ -5780,7 +5789,7 @@ function renderMap() {
     ctx.beginPath(); ctx.moveTo(hx - 8 * U, py + ph - 1); ctx.lineTo(hx, py + ph + 10 * U); ctx.lineTo(hx + 8 * U, py + ph - 1); ctx.closePath(); ctx.fill();
     const tx = px + 24 * U, tyy = py + ph / 2; ctx.fillStyle = COL.sun; ctx.beginPath(); ctx.moveTo(tx - 6 * U, tyy - 8 * U); ctx.lineTo(tx + 8 * U, tyy); ctx.lineTo(tx - 6 * U, tyy + 8 * U); ctx.closePath(); ctx.fill();
     flatText('Play', px + pw / 2 + 12 * U, tyy + 1, bsz, '#FFF3E0', 'center', '800 ' + FB);
-    BTN.unshift({ x: px - 6, y: py - 6, w: pw + 12, h: ph + 18 * U, fn: () => startLevel(mapW, mapSel) });
+    BTN.push({ x: px - 6, y: py - 6, w: pw + 12, h: ph + 18 * U, fn: () => startLevel(mapW, mapSel) });   // pushed last = wins taps
   }
 }
 // step to the next / previous stop on the map, rolling into the next or previous city at the ends
@@ -5792,7 +5801,7 @@ function mapStepButtons() {   // rooftop arrows: same size and spot as the in-ga
     ci(x, c.by, c.bs / 2); ctx.fillStyle = 'rgba(27,20,40,.22)'; ctx.fill(); ctx.lineWidth = 2.5; ctx.strokeStyle = 'rgba(255,243,224,.85)'; ctx.stroke();
     ctx.beginPath(); ctx.moveTo(x - dir * c.bs * 0.1, c.by - c.bs * 0.17); ctx.lineTo(x + dir * c.bs * 0.14, c.by); ctx.lineTo(x - dir * c.bs * 0.1, c.by + c.bs * 0.17); ctx.closePath(); ctx.fillStyle = '#FFF3E0'; ctx.fill();
     ctx.restore();
-    BTN.unshift({ x: x - c.bs / 2, y: c.by - c.bs / 2, w: c.bs, h: c.bs, fn: () => { if (on) fn(); } });
+    BTN.push({ x: x - c.bs / 2, y: c.by - c.bs / 2, w: c.bs, h: c.bs, fn: () => { if (on) fn(); } });   // over the roofs, so it wins taps
   };
   one(c.lx, -1, canL, () => mapSel--); one(c.rx, 1, canR, () => mapSel++);
   if (TEST_UNLOCK) flatText('TEST MODE', VW - SAFE.r - 12, VH - SAFE.b - 12, Math.round(11 * U), COL.sun, 'right', '800 ' + FB);
